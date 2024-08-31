@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<v:BasePage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="MetalMachine.Pages.LandingView"
+             xmlns:vm="clr-namespace:MetalMachine.ViewModels"
+             xmlns:v="clr-namespace:MetalMachine.Pages"
+             x:DataType="vm:LandingViewModel"
+             Title="LandingView">
+    <VerticalStackLayout Spacing="10">
+        <Label 
+            Text="Welcome to Metal Machine"
+            VerticalOptions="Center" 
+            HorizontalOptions="Center" />
+        <Label 
+            Text="{Binding User}"
+            VerticalOptions="Center" 
+            HorizontalOptions="Center" />
+        <Label 
+            Text="{Binding Latitude}"
+            VerticalOptions="Center" 
+            HorizontalOptions="Center" />
+    </VerticalStackLayout>
+</v:BasePage>
