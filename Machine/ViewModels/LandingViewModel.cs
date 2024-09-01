@@ -9,7 +9,8 @@ public partial class LandingViewModel : BaseViewModel
 {
     private string _user;
     private double _latitude;
-    public LandingViewModel(IDBManager db) : base(db) 
+    private double _distance;
+    public LandingViewModel(IDBManager db, IGeocoding g, IPreferences p) : base(db, g, p) 
     {
         _user = "Syslac";
         OnPropertyChanged(nameof(User));
@@ -17,17 +18,27 @@ public partial class LandingViewModel : BaseViewModel
 
     public string User => _user;
     public string Latitude => String.Format("{0}", _latitude);
+    public string Distance => String.Format("{0}", _distance);
 
     public override async Task OnAppearing() 
     {
         await base.OnAppearing();
-        _dbManager.AddAddress("Test", (45.5, 12.5));
-        (double, double)? res = await _dbManager.GetCoordinates("Test");
+        _dbManager.AddAddress("Test", new Location(45.5, 12.5));
+        Location? res = await _dbManager.GetCoordinates("Test");
         if (res is not null) 
         {
-            _latitude = res?.Item1 ?? 0;
+            _latitude = res?.Latitude ?? 0;
             OnPropertyChanged(nameof(Latitude));
         }
+
+        string [] addresses = ["Padua, Italy", "Bolzano, Italy"];
+        Location [] positions = [new Location(), new Location()];
+        for (int i = 0; i < addresses.Length; i++) 
+        {
+            positions[i] = (await _geocoding.GetLocationsAsync(addresses[i])).FirstOrDefault();
+        }
+        _distance = Location.CalculateDistance(positions[0], positions[1], DistanceUnits.Kilometers);
+        OnPropertyChanged(nameof(Distance));
     }
 
     [RelayCommand]

@@ -31,7 +31,7 @@ public class SQLiteDBManager : IDBManager
         conn = null;
     }
 
-    public async void AddAddress(string address, (double, double) coordinates)
+    public async void AddAddress(string address, Location coordinates)
     {
         if (conn is null) 
         {
@@ -56,8 +56,8 @@ public class SQLiteDBManager : IDBManager
         comm.CommandText = query;
         await comm.PrepareAsync();
         comm.Parameters.AddWithValue("$add", address);
-        comm.Parameters.AddWithValue("$lat", coordinates.Item1);
-        comm.Parameters.AddWithValue("$lon", coordinates.Item2);
+        comm.Parameters.AddWithValue("$lat", coordinates.Latitude);
+        comm.Parameters.AddWithValue("$lon", coordinates.Longitude);
 
         try 
         {
@@ -92,7 +92,7 @@ public class SQLiteDBManager : IDBManager
         throw new NotImplementedException();
     }
 
-    public async Task<(double, double)?> GetCoordinates(string address, bool acceptAmbiguous = true)
+    public async Task<Location?> GetCoordinates(string address, bool acceptAmbiguous = true)
     {
         if (conn is null) 
         {
@@ -115,7 +115,7 @@ public class SQLiteDBManager : IDBManager
         comm.CommandText = query;
         await comm.PrepareAsync();
         comm.Parameters.AddWithValue("@add", address);
-        (double, double)? retVal;
+        Location retVal = new Location();
         try 
         {
             DataTable dt = new DataTable();
@@ -128,7 +128,8 @@ public class SQLiteDBManager : IDBManager
                 return null;
             }
             DataRow record = dt.Rows[0];
-            retVal = (record.Field<double>("latitude"), record.Field<double>("longitude"));
+            retVal.Latitude = record.Field<double>("latitude");
+            retVal.Longitude = record.Field<double>("longitude");
         }
         catch (Exception ex) 
         {

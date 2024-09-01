@@ -35,16 +35,20 @@ public static class MauiProgram
 	public static MauiAppBuilder RegisterServices(this MauiAppBuilder builder) 
 	{
 		builder.Services.AddSingleton<IDBManager>(new SQLiteDBManager(_dbPath));
+		builder.Services.AddSingleton<IGeocoding>(Geocoding.Default);
+		builder.Services.AddSingleton<IPreferences>(Preferences.Default);
 		return builder;
 	}
 	public static MauiAppBuilder RegisterViews(this MauiAppBuilder builder) 
 	{
 		builder.Services.AddSingleton<LandingView>();
+		builder.Services.AddSingleton<UserView>();
 		return builder;
 	}
 	public static MauiAppBuilder RegisterViewModels(this MauiAppBuilder builder) 
 	{
 		builder.Services.AddSingleton<LandingViewModel>();
+		builder.Services.AddSingleton<UserViewModel>();
 		return builder;
 	}
 }

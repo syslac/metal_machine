@@ -24,6 +24,10 @@
                 Text="{Binding Latitude}"
                 VerticalOptions="Center" 
                 HorizontalOptions="Center" />
+            <Label 
+                Text="{Binding Distance}"
+                VerticalOptions="Center" 
+                HorizontalOptions="Center" />
         </VerticalStackLayout>
         <ImageButton Grid.Column="1" Source="sweep.svg" Command="{Binding ClearCacheCommand}" HeightRequest="36" VerticalOptions="StartAndExpand"/>
     </Grid>

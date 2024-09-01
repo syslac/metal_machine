@@ -9,10 +9,14 @@ public class BaseViewModel : ObservableObject
 {
 
     protected IDBManager _dbManager;
+    protected IGeocoding _geocoding;
+    protected IPreferences _prefs;
 
-    public BaseViewModel (IDBManager dbManager) 
+    public BaseViewModel (IDBManager dbManager, IGeocoding geo, IPreferences pref) 
     {
         _dbManager = dbManager;
+        _geocoding = geo;
+        _prefs = pref;
     }
 
     public virtual async Task OnAppearing() 
