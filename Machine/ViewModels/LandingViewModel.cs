@@ -19,21 +19,22 @@ public partial class LandingViewModel : BaseViewModel
     public override async Task OnAppearing() 
     {
         await base.OnAppearing();
-        _dbManager.AddAddress("Test", new Location(45.5, 12.5));
-        Location? res = await _dbManager.GetCoordinates("Test");
-        if (res is not null) 
-        {
-            _latitude = res?.Latitude ?? 0;
-            OnPropertyChanged(nameof(Latitude));
-        }
+        // test code, no longer needed
+        //_dbManager.AddAddress("Test", new Location(45.5, 12.5));
+        //Location? res = await _dbManager.GetCoordinates("Test");
+        //if (res is not null) 
+        //{
+        //    _latitude = res?.Latitude ?? 0;
+        //    OnPropertyChanged(nameof(Latitude));
+        //}
 
-        string [] addresses = ["Padua, Italy", "Bolzano, Italy"];
+        string [] addresses = ["Rome, Italy"];
         Location [] positions = [new Location(), new Location()];
         for (int i = 0; i < addresses.Length; i++) 
         {
             positions[i] = (await _geocoding.GetLocationsAsync(addresses[i])).FirstOrDefault();
         }
-        _distance = Location.CalculateDistance(positions[0], positions[1], DistanceUnits.Kilometers);
+        _distance = Location.CalculateDistance(CurrentLocation, positions[0], DistanceUnits.Kilometers);
         OnPropertyChanged(nameof(Distance));
     }
 

@@ -51,8 +51,13 @@ public partial class BaseViewModel : ObservableObject
             {
                 _currUser = value;
                 _prefs.Set<string>(typeof(MetalPreferences.UserName).Name, value?.Name ?? String.Empty);
+                Location userLoc = _dbManager.GetUserLocation(value?.Name ?? String.Empty).Result;
+                _prefs.Set<double>(typeof(MetalPreferences.UserLatitude).Name, userLoc.Latitude);
+                _prefs.Set<double>(typeof(MetalPreferences.UserLongitude).Name, userLoc.Longitude);
+                _currLocation = userLoc;
             }
             OnPropertyChanged(nameof(CurrentUser));
+            OnPropertyChanged(nameof(CurrentLocation));
         } 
     }
 

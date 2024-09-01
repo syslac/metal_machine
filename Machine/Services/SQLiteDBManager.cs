@@ -139,12 +139,12 @@ public class SQLiteDBManager : IDBManager
         return retVal;
     }
 
-    public async Task<string> GetUserLocation(string user)
+    public async Task<Location> GetUserLocation(string user)
     {
         Preamble();
 
         string query = """
-            SELECT [users].[user_name], [locations].[address] 
+            SELECT [users].[user_name], [locations].[latitude], [locations].[longitude] 
             FROM [users] 
             LEFT JOIN [locations] ON [users].[user_location_id] = [locations].[id]
             WHERE [users].[user_name] LIKE @name;
@@ -153,7 +153,7 @@ public class SQLiteDBManager : IDBManager
         comm.CommandText = query;
         await comm.PrepareAsync();
         comm.Parameters.AddWithValue("@name", user);
-        string retVal = String.Empty;
+        Location retVal = new Location();
         try 
         {
             DataTable dt = new DataTable();
@@ -164,7 +164,8 @@ public class SQLiteDBManager : IDBManager
                 return null;
             }
             DataRow record = dt.Rows[0];
-            retVal = record.Field<string>("address");
+            retVal.Latitude = record.Field<double>("latitude");
+            retVal.Longitude = record.Field<double>("longitude");
         }
         catch (Exception ex) 
         {

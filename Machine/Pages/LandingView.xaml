@@ -21,10 +21,6 @@
                 <Label Text="{Binding CurrentUser}" />
             </StackLayout>
             <Label 
-                Text="{Binding Latitude}"
-                VerticalOptions="Center" 
-                HorizontalOptions="Center" />
-            <Label 
                 Text="{Binding Distance}"
                 VerticalOptions="Center" 
                 HorizontalOptions="Center" />

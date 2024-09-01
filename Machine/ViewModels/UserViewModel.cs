@@ -67,6 +67,7 @@ public partial class UserViewModel : BaseViewModel
             Location storedLocation = await _dbManager.UpdateUserLocation(CurrentUser.Name, NewLocation, _geocoding);
             _prefs.Set<double>(typeof(MetalPreferences.UserLatitude).Name, storedLocation.Latitude);
             _prefs.Set<double>(typeof(MetalPreferences.UserLongitude).Name, storedLocation.Longitude);
+            OnPropertyChanged(nameof(CurrentLocation));
         }
     } 
 

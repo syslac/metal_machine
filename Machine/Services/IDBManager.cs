@@ -11,7 +11,7 @@ public interface IDBManager
     // calls InitTables after cleaning up db
     public void ReinitDb();
     public Task<List<User>> GetUsers();
-    public Task<string> GetUserLocation(string user);
+    public Task<Location> GetUserLocation(string user);
     public Task<Location> UpdateUserLocation(string user, string location, IGeocoding? geo);
     public void RegisterUser(string user);
     // returns (lat, lon), requires address, returns null if no matches
