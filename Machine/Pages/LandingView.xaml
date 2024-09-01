@@ -6,18 +6,25 @@
              xmlns:v="clr-namespace:MetalMachine.Pages"
              x:DataType="vm:LandingViewModel"
              Title="LandingView">
-    <VerticalStackLayout Spacing="10">
-        <Label 
-            Text="Welcome to Metal Machine"
-            VerticalOptions="Center" 
-            HorizontalOptions="Center" />
-        <Label 
-            Text="{Binding User}"
-            VerticalOptions="Center" 
-            HorizontalOptions="Center" />
-        <Label 
-            Text="{Binding Latitude}"
-            VerticalOptions="Center" 
-            HorizontalOptions="Center" />
-    </VerticalStackLayout>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="9*" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <VerticalStackLayout Spacing="10" Grid.Column="0">
+            <Label 
+                Text="Welcome to Metal Machine"
+                VerticalOptions="Center" 
+                HorizontalOptions="Center" />
+            <Label 
+                Text="{Binding User}"
+                VerticalOptions="Center" 
+                HorizontalOptions="Center" />
+            <Label 
+                Text="{Binding Latitude}"
+                VerticalOptions="Center" 
+                HorizontalOptions="Center" />
+        </VerticalStackLayout>
+        <ImageButton Grid.Column="1" Source="sweep.svg" Command="{Binding ClearCacheCommand}" HeightRequest="36" VerticalOptions="StartAndExpand"/>
+    </Grid>
 </v:BasePage>

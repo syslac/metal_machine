@@ -1,13 +1,14 @@
 using System;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using MetalMachine.Services;
 
 namespace MetalMachine.ViewModels;
 
-public class LandingViewModel : BaseViewModel
+public partial class LandingViewModel : BaseViewModel
 {
     private string _user;
-    private float _latitude;
+    private double _latitude;
     public LandingViewModel(IDBManager db) : base(db) 
     {
         _user = "Syslac";
@@ -20,13 +21,19 @@ public class LandingViewModel : BaseViewModel
     public override async Task OnAppearing() 
     {
         await base.OnAppearing();
-        _dbManager.AddAddress("Test", (45.0f, 12.0f));
-        (float, float)? res = await _dbManager.GetCoordinates("Test");
+        _dbManager.AddAddress("Test", (45.5, 12.5));
+        (double, double)? res = await _dbManager.GetCoordinates("Test");
         if (res is not null) 
         {
             _latitude = res?.Item1 ?? 0;
             OnPropertyChanged(nameof(Latitude));
         }
+    }
+
+    [RelayCommand]
+    public void ClearCache () 
+    {
+        _dbManager.ReinitDb();
     }
 
 }

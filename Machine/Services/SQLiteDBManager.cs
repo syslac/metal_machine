@@ -31,7 +31,7 @@ public class SQLiteDBManager : IDBManager
         conn = null;
     }
 
-    public async void AddAddress(string address, (float, float) coordinates)
+    public async void AddAddress(string address, (double, double) coordinates)
     {
         if (conn is null) 
         {
@@ -92,7 +92,7 @@ public class SQLiteDBManager : IDBManager
         throw new NotImplementedException();
     }
 
-    public async Task<(float, float)?> GetCoordinates(string address, bool acceptAmbiguous = true)
+    public async Task<(double, double)?> GetCoordinates(string address, bool acceptAmbiguous = true)
     {
         if (conn is null) 
         {
@@ -110,23 +110,25 @@ public class SQLiteDBManager : IDBManager
         {
             Log.Warn("CTOR", ex.Message);
         }
-        string query = "SELECT * FROM [locations];";// WHERE [address] LIKE '%'";// '$add';";
+        string query = "SELECT * FROM [locations] WHERE [address] LIKE @add;";
         SqliteCommand comm = conn.CreateCommand();
         comm.CommandText = query;
         await comm.PrepareAsync();
-        //comm.Parameters.AddWithValue("$add", address);
-        (float, float)? retVal;
+        comm.Parameters.AddWithValue("@add", address);
+        (double, double)? retVal;
         try 
         {
             DataTable dt = new DataTable();
             DbDataReader res = await comm.ExecuteReaderAsync();
             dt.Load(res);
-            if (dt.Rows.Count == 0 || (dt.Rows.Count > 1 && !acceptAmbiguous)) 
+            if (dt.Rows.Count == 0 
+                || (dt.Rows.Count > 1 && !acceptAmbiguous)
+                ) 
             { 
                 return null;
             }
             DataRow record = dt.Rows[0];
-            retVal = ((float)record["lat"], (float)record["lon"]);
+            retVal = (record.Field<double>("latitude"), record.Field<double>("longitude"));
         }
         catch (Exception ex) 
         {
@@ -154,20 +156,20 @@ public class SQLiteDBManager : IDBManager
             Log.Warn("CTOR", ex.Message);
         }
         string [] createQuery = ["""
-            CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, 
-            name TEXT);
+            CREATE TABLE IF NOT EXISTS users ([id] INTEGER PRIMARY KEY AUTOINCREMENT, 
+            [name] TEXT UNIQUE);
         """,
         """
-            CREATE TABLE IF NOT EXISTS concerts (id INTEGER PRIMARY KEY AUTOINCREMENT, 
-            user INTEGER,
-            concert_name TEXT,
-            concert_location INTEGER);
+            CREATE TABLE IF NOT EXISTS concerts ([id] INTEGER PRIMARY KEY AUTOINCREMENT, 
+            [user] INTEGER,
+            [concert_name] TEXT,
+            [concert_location] INTEGER);
         """,
         """
-            CREATE TABLE IF NOT EXISTS locations (id INTEGER PRIMARY KEY AUTOINCREMENT, 
-            address TEXT,
-            latitude REAL,
-            longitude REAL);
+            CREATE TABLE IF NOT EXISTS locations ([id] INTEGER PRIMARY KEY AUTOINCREMENT, 
+            [address] TEXT UNIQUE,
+            [latitude] REAL,
+            [longitude] REAL);
         """];
         foreach (string query in createQuery) 
         {
@@ -183,5 +185,45 @@ public class SQLiteDBManager : IDBManager
             }
         }
         await conn.CloseAsync();
+    }
+
+    public async void ReinitDb() 
+    {
+        try 
+        {
+            if (conn.State != ConnectionState.Open) 
+            {
+                conn.OpenAsync();
+            }
+        }
+        catch (Exception ex) 
+        {
+            Log.Warn("CTOR", ex.Message);
+        }
+        string [] deleteQuery = ["""
+            DROP TABLE users;
+        """,
+        """
+            DROP TABLE concerts;
+        """,
+        """
+            DROP TABLE locations;
+        """];
+        foreach (string query in deleteQuery) 
+        {
+            SqliteCommand comm = conn.CreateCommand();
+            comm.CommandText = query;
+            try 
+            {
+                int rowsInserted = await comm.ExecuteNonQueryAsync();
+            }
+            catch (Exception ex) 
+            {
+                Log.Warn($"ResetDb - delete-ing {query}", ex.Message);
+            }
+        }
+        await conn.CloseAsync();
+
+        InitTables();
     }
 }
