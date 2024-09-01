@@ -7,16 +7,12 @@ namespace MetalMachine.ViewModels;
 
 public partial class LandingViewModel : BaseViewModel
 {
-    private string _user;
     private double _latitude;
     private double _distance;
     public LandingViewModel(IDBManager db, IGeocoding g, IPreferences p) : base(db, g, p) 
     {
-        _user = "Syslac";
-        OnPropertyChanged(nameof(User));
     }
 
-    public string User => _user;
     public string Latitude => String.Format("{0}", _latitude);
     public string Distance => String.Format("{0}", _distance);
 

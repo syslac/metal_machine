@@ -31,23 +31,32 @@ public class SQLiteDBManager : IDBManager
         conn = null;
     }
 
-    public async void AddAddress(string address, Location coordinates)
+    private async void Preamble() 
     {
         if (conn is null) 
         {
+            await Task.CompletedTask;
+            Log.Warn("CTOR", "Null connection");
             return;
         }
         try 
         {
             if (conn.State != ConnectionState.Open) 
             {
-                conn.OpenAsync();
+                await conn.OpenAsync();
             }
         }
         catch (Exception ex) 
         {
             Log.Warn("CTOR", ex.Message);
         }
+
+    }
+
+    public async void AddAddress(string address, Location coordinates)
+    {
+        Preamble();
+
         string query = """
         INSERT INTO [locations] ([address], [latitude], [longitude])
         VALUES ($add, $lat, $lon);
@@ -94,22 +103,8 @@ public class SQLiteDBManager : IDBManager
 
     public async Task<Location?> GetCoordinates(string address, bool acceptAmbiguous = true)
     {
-        if (conn is null) 
-        {
-            await Task.CompletedTask;
-            return null;
-        }
-        try 
-        {
-            if (conn.State != ConnectionState.Open) 
-            {
-                conn.OpenAsync();
-            }
-        }
-        catch (Exception ex) 
-        {
-            Log.Warn("CTOR", ex.Message);
-        }
+        Preamble();
+
         string query = "SELECT * FROM [locations] WHERE [address] LIKE @add;";
         SqliteCommand comm = conn.CreateCommand();
         comm.CommandText = query;
@@ -143,28 +138,90 @@ public class SQLiteDBManager : IDBManager
         return retVal;
     }
 
-    public async void InitTables()
+    public async Task<string> GetUserLocation(string user)
     {
+        Preamble();
+
+        string query = """
+            SELECT [users].[user_name], [locations].[address] 
+            FROM [users] 
+            LEFT JOIN [locations] ON [users].[user_location_id] = [locations].[id]
+            WHERE [users].[user_name] LIKE @name;
+            """;
+        SqliteCommand comm = conn.CreateCommand();
+        comm.CommandText = query;
+        await comm.PrepareAsync();
+        comm.Parameters.AddWithValue("@name", user);
+        string retVal = String.Empty;
         try 
         {
-            if (conn.State != ConnectionState.Open) 
+            DataTable dt = new DataTable();
+            DbDataReader res = await comm.ExecuteReaderAsync();
+            dt.Load(res);
+            if (dt.Rows.Count == 0) 
+            { 
+                return null;
+            }
+            DataRow record = dt.Rows[0];
+            retVal = record.Field<string>("address");
+        }
+        catch (Exception ex) 
+        {
+            Log.Warn($"GetCoordinates - {query}", ex.Message);
+            retVal = null;
+        }
+        finally 
+        {
+            await conn.CloseAsync();
+        }
+        return retVal;
+    }
+
+    public async Task<List<User>> GetUsers()
+    {
+        Preamble();
+
+        string query = "SELECT * FROM [users];";
+        SqliteCommand comm = conn.CreateCommand();
+        comm.CommandText = query;
+        await comm.PrepareAsync();
+        List<User> retVal = [];
+        try 
+        {
+            DataTable dt = new DataTable();
+            DbDataReader res = await comm.ExecuteReaderAsync();
+            dt.Load(res);
+            foreach (DataRow record in dt.Rows) 
             {
-                conn.OpenAsync();
+                retVal.Add(new User(record.Field<string>("user_name")));
             }
         }
         catch (Exception ex) 
         {
-            Log.Warn("CTOR", ex.Message);
+            Log.Warn($"GetCoordinates - {query}", ex.Message);
+            retVal = null;
         }
+        finally 
+        {
+            await conn.CloseAsync();
+        }
+        return retVal;
+    }
+
+    public async void InitTables()
+    {
+        Preamble();
+        
         string [] createQuery = ["""
             CREATE TABLE IF NOT EXISTS users ([id] INTEGER PRIMARY KEY AUTOINCREMENT, 
-            [name] TEXT UNIQUE);
+            [user_name] TEXT UNIQUE,
+            [user_location_id] INTEGER);
         """,
         """
             CREATE TABLE IF NOT EXISTS concerts ([id] INTEGER PRIMARY KEY AUTOINCREMENT, 
-            [user] INTEGER,
+            [user_id] INTEGER,
             [concert_name] TEXT,
-            [concert_location] INTEGER);
+            [concert_location_id] INTEGER);
         """,
         """
             CREATE TABLE IF NOT EXISTS locations ([id] INTEGER PRIMARY KEY AUTOINCREMENT, 
@@ -188,19 +245,41 @@ public class SQLiteDBManager : IDBManager
         await conn.CloseAsync();
     }
 
-    public async void ReinitDb() 
+    public async void RegisterUser(string user)
     {
+        Preamble();
+
+        string query = """
+        INSERT INTO [users] ([user_name])
+        VALUES (@name);
+        """;
+        SqliteCommand comm = conn.CreateCommand();
+        comm.CommandText = query;
+        await comm.PrepareAsync();
+        comm.Parameters.AddWithValue("@name", user);
+
         try 
         {
-            if (conn.State != ConnectionState.Open) 
+            int rowsInserted = await comm.ExecuteNonQueryAsync();
+            if (rowsInserted < 1) 
             {
-                conn.OpenAsync();
+                Log.Warn($"RegisterUser - {query}", "No rows inserted");
             }
         }
         catch (Exception ex) 
         {
-            Log.Warn("CTOR", ex.Message);
+            Log.Warn($"RegisterUser - {query}", ex.Message);
         }
+        finally 
+        {
+            await conn.CloseAsync();
+        }
+    }
+
+    public async void ReinitDb() 
+    {
+        Preamble();
+
         string [] deleteQuery = ["""
             DROP TABLE users;
         """,
@@ -226,5 +305,10 @@ public class SQLiteDBManager : IDBManager
         await conn.CloseAsync();
 
         InitTables();
+    }
+
+    public void UpdateUserLocation(string user, string location)
+    {
+        throw new NotImplementedException();
     }
 }

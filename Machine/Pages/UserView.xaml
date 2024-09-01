@@ -6,10 +6,30 @@
              x:DataType="vm:UserViewModel"
              x:Class="MetalMachine.Pages.UserView"
              Title="UserView">
-    <VerticalStackLayout>
-        <Label 
-            Text="Welcome to .NET MAUI!"
-            VerticalOptions="Center" 
-            HorizontalOptions="Center" />
-    </VerticalStackLayout>
+    <Grid ColumnSpacing="5" RowSpacing="2" HeightRequest="150" VerticalOptions="StartAndExpand">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="3*" />
+            <ColumnDefinition Width="6*" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <!-- first row: current status -->
+        <Label Grid.Row="0" Grid.Column="0" Text="Current User:" HorizontalOptions="EndAndExpand" />
+        <Label Grid.Row="0" Grid.Column="1" Text="{Binding CurrentUser}" HorizontalOptions="StartAndExpand" FontAttributes="Bold" />
+        <ImageButton Grid.Row="0" Grid.Column="2" Source="sweep.svg" WidthRequest="32" Command="{Binding LogoutCommand}" />
+        <!-- second row: insert or select user -->
+        <Label Grid.Row="1" Grid.Column="0" Text="Switch User:" HorizontalOptions="EndAndExpand" IsVisible="{Binding LoggedIn}" />
+        <Label Grid.Row="1" Grid.Column="0" Text="Login as User:" HorizontalOptions="EndAndExpand" IsVisible="{Binding LoggedIn,Converter={StaticResource not}}" />
+        <StackLayout Orientation="Horizontal" Grid.Row="1" Grid.Column="1" Spacing="3">
+            <Picker ItemsSource="{Binding AvailableUsers}" SelectedItem="{Binding CurrentUser, Mode=TwoWay}" IsVisible="{Binding SelectingExisting}" MinimumWidthRequest="150" />
+            <Entry Text="{Binding NewUser,Mode=TwoWay}" IsVisible="{Binding SelectingExisting,Converter={StaticResource not}}" Placeholder="Insert new user name" MinimumWidthRequest="150" />
+            <ImageButton Source="plus.svg" WidthRequest="32" Command="{Binding SwitchExistingNewCommand}" IsVisible="{Binding SelectingExisting}"/>
+            <ImageButton Source="done.svg" WidthRequest="32" Command="{Binding RegisterUserCommand}" IsVisible="{Binding SelectingExisting, Converter={StaticResource not}}"/>
+        </StackLayout>
+        <!-- third row: edit user location -->
+    </Grid>
 </v:BasePage>

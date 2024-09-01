@@ -16,10 +16,10 @@
                 Text="Welcome to Metal Machine"
                 VerticalOptions="Center" 
                 HorizontalOptions="Center" />
-            <Label 
-                Text="{Binding User}"
-                VerticalOptions="Center" 
-                HorizontalOptions="Center" />
+            <StackLayout Orientation="Horizontal" VerticalOptions="Center" HorizontalOptions="Center">
+                <Label Text="Logged in as " />
+                <Label Text="{Binding CurrentUser}" />
+            </StackLayout>
             <Label 
                 Text="{Binding Latitude}"
                 VerticalOptions="Center" 

@@ -1,24 +1,61 @@
 using System;
+using System.Collections.ObjectModel;
+using CommunityToolkit.Mvvm.Input;
+using Java.Util;
+using MetalMachine.Models;
 using MetalMachine.Services;
 
 namespace MetalMachine.ViewModels;
 
-public class UserViewModel : BaseViewModel
+public partial class UserViewModel : BaseViewModel
 {
-    private string _currUser;
+    private List<User> _users;
 
     public UserViewModel (IDBManager db, IGeocoding g, IPreferences p) : base (db, g, p) 
     {
-        if (_prefs is not null) 
+        _users = [];
+        SelectingExisting = true;
+
+    }
+
+    public override async Task OnAppearing() 
+    {
+        await base.OnAppearing();
+        if (_dbManager is not null) 
         {
-            string prefUser = _prefs.Get<string>(typeof(MetalPreferences.UserName).Name, String.Empty);
-            if (prefUser != String.Empty) 
-            {
-                _currUser = prefUser;
-            }
+            _users = await _dbManager.GetUsers();
+            OnPropertyChanged(nameof(AvailableUsers));
         }
     }
 
-    public string CurrentUser => _currUser;
+    public ObservableCollection<User> AvailableUsers => new ObservableCollection<User>(_users);
+    public string NewUser { get; set; }
+
+    public bool SelectingExisting { get; set; }
+
+    [RelayCommand]
+    private void SwitchExistingNew()
+    {
+        SelectingExisting = !SelectingExisting;
+        OnPropertyChanged(nameof(SelectingExisting));
+    } 
+
+    [RelayCommand]
+    private async void RegisterUser()
+    {
+        if (_dbManager is not null)
+        {
+            _dbManager.RegisterUser(NewUser);
+            _users = await _dbManager.GetUsers();
+            OnPropertyChanged(nameof(AvailableUsers));
+        }
+        _currUser = new User(NewUser);
+        NewUser = String.Empty;
+        SelectingExisting = !SelectingExisting;
+        OnPropertyChanged(nameof(SelectingExisting));
+        OnPropertyChanged(nameof(CurrentUser));
+        OnPropertyChanged(nameof(NewUser));
+        OnPropertyChanged(nameof(LoggedIn));
+    } 
 
 }

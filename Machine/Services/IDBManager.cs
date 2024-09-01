@@ -1,3 +1,4 @@
+using Android.OS;
 using MetalMachine.Models;
 
 namespace MetalMachine.Services;
@@ -9,6 +10,10 @@ public interface IDBManager
 
     // calls InitTables after cleaning up db
     public void ReinitDb();
+    public Task<List<User>> GetUsers();
+    public Task<string> GetUserLocation(string user);
+    public void UpdateUserLocation(string user, string location);
+    public void RegisterUser(string user);
     // returns (lat, lon), requires address, returns null if no matches
     // or if we have more than 1 result and acceptAmbiguous is false
     public Task<Location?> GetCoordinates(string address, bool acceptAmbiguous = true);
