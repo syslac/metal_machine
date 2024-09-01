@@ -12,7 +12,7 @@ public interface IDBManager
     public void ReinitDb();
     public Task<List<User>> GetUsers();
     public Task<string> GetUserLocation(string user);
-    public void UpdateUserLocation(string user, string location);
+    public Task<Location> UpdateUserLocation(string user, string location, IGeocoding? geo);
     public void RegisterUser(string user);
     // returns (lat, lon), requires address, returns null if no matches
     // or if we have more than 1 result and acceptAmbiguous is false

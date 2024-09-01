@@ -5,9 +5,9 @@ namespace MetalMachine.Models;
 public class User
 {
     private string _user_name;
-    private string _user_location;
+    private Location _user_location;
 
-    public User (string name, string? location = null) 
+    public User (string name, Location? location = null) 
     {
         _user_name = name;
         if (location is not null) 
@@ -17,7 +17,7 @@ public class User
     }
 
     public string Name => _user_name;
-    public string Location { get; set; }
+    public Location Location { get; set; }
 
     public override string ToString()
     {

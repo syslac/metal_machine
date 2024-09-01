@@ -14,6 +14,7 @@ public partial class BaseViewModel : ObservableObject
     protected IGeocoding _geocoding;
     protected IPreferences _prefs;
     protected User _currUser;
+    protected Location _currLocation;
 
     public BaseViewModel (IDBManager dbManager, IGeocoding geo, IPreferences pref) 
     {
@@ -30,9 +31,13 @@ public partial class BaseViewModel : ObservableObject
         if (_prefs is not null) 
         {
             string prefUser = _prefs.Get<string>(typeof(MetalPreferences.UserName).Name, String.Empty);
+            double prefLat = _prefs.Get<double>(typeof(MetalPreferences.UserLatitude).Name, 0.0);
+            double prefLon = _prefs.Get<double>(typeof(MetalPreferences.UserLongitude).Name, 0.0);
             _currUser = new User(prefUser);
+            _currLocation = new Location(prefLat, prefLon);
         }
         OnPropertyChanged(nameof(CurrentUser));
+        OnPropertyChanged(nameof(CurrentLocation));
     }
 
     public User CurrentUser { get { return _currUser; }
@@ -50,6 +55,9 @@ public partial class BaseViewModel : ObservableObject
             OnPropertyChanged(nameof(CurrentUser));
         } 
     }
+
+    public Location CurrentLocation => _currLocation;
+
     public bool LoggedIn => CurrentUser.Name != String.Empty;
 
     [RelayCommand]
@@ -58,8 +66,11 @@ public partial class BaseViewModel : ObservableObject
         if (_prefs is not null) 
         {
             _prefs.Set<string>(typeof(MetalPreferences.UserName).Name, String.Empty);
+            _prefs.Set<double>(typeof(MetalPreferences.UserLatitude).Name, 0.0);
+            _prefs.Set<double>(typeof(MetalPreferences.UserLongitude).Name, 0.0);
             _currUser = new User(String.Empty);
             OnPropertyChanged(nameof(CurrentUser));
+            OnPropertyChanged(nameof(CurrentLocation));
             OnPropertyChanged(nameof(LoggedIn));
         }
     }

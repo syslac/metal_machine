@@ -19,7 +19,10 @@
         </Grid.ColumnDefinitions>
         <!-- first row: current status -->
         <Label Grid.Row="0" Grid.Column="0" Text="Current User:" HorizontalOptions="EndAndExpand" />
-        <Label Grid.Row="0" Grid.Column="1" Text="{Binding CurrentUser}" HorizontalOptions="StartAndExpand" FontAttributes="Bold" />
+        <StackLayout Orientation="Horizontal" Grid.Row="0" Grid.Column="1" Spacing="10">
+            <Label Text="{Binding CurrentUser}" HorizontalOptions="StartAndExpand" FontAttributes="Bold" />
+            <Label Text="{Binding CurrentLocation}" HorizontalOptions="StartAndExpand" FontAttributes="Italic" />
+        </StackLayout>
         <ImageButton Grid.Row="0" Grid.Column="2" Source="sweep.svg" WidthRequest="32" Command="{Binding LogoutCommand}" />
         <!-- second row: insert or select user -->
         <Label Grid.Row="1" Grid.Column="0" Text="Switch User:" HorizontalOptions="EndAndExpand" IsVisible="{Binding LoggedIn}" />
@@ -31,5 +34,10 @@
             <ImageButton Source="done.svg" WidthRequest="32" Command="{Binding RegisterUserCommand}" IsVisible="{Binding SelectingExisting, Converter={StaticResource not}}"/>
         </StackLayout>
         <!-- third row: edit user location -->
+        <Label Grid.Row="2" Grid.Column="0" Text="User location:" HorizontalOptions="EndAndExpand" />
+        <StackLayout Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Spacing="5">
+            <Entry Text="{Binding NewLocation,Mode=TwoWay}" IsEnabled="{Binding LoggedIn}" Placeholder="Edit user location" MinimumWidthRequest="150" />
+            <ImageButton Source="done.svg" WidthRequest="32" Command="{Binding UpdateLocationCommand}" />
+        </StackLayout>
     </Grid>
 </v:BasePage>

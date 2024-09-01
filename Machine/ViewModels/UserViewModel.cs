@@ -30,6 +30,7 @@ public partial class UserViewModel : BaseViewModel
 
     public ObservableCollection<User> AvailableUsers => new ObservableCollection<User>(_users);
     public string NewUser { get; set; }
+    public string NewLocation { get; set; }
 
     public bool SelectingExisting { get; set; }
 
@@ -56,6 +57,17 @@ public partial class UserViewModel : BaseViewModel
         OnPropertyChanged(nameof(CurrentUser));
         OnPropertyChanged(nameof(NewUser));
         OnPropertyChanged(nameof(LoggedIn));
+    } 
+
+    [RelayCommand]
+    private async void UpdateLocation()
+    {
+        if (_dbManager is not null)
+        {
+            Location storedLocation = await _dbManager.UpdateUserLocation(CurrentUser.Name, NewLocation, _geocoding);
+            _prefs.Set<double>(typeof(MetalPreferences.UserLatitude).Name, storedLocation.Latitude);
+            _prefs.Set<double>(typeof(MetalPreferences.UserLongitude).Name, storedLocation.Longitude);
+        }
     } 
 
 }

@@ -6,6 +6,7 @@ using Android.Util;
 using System.Data.Common;
 using System.Data;
 using Microsoft.Maui.Platform;
+using Javax.Sql;
 
 namespace MetalMachine.Services;
 
@@ -307,8 +308,87 @@ public class SQLiteDBManager : IDBManager
         InitTables();
     }
 
-    public void UpdateUserLocation(string user, string location)
+    public async Task<Location> UpdateUserLocation(string user, string location, IGeocoding? geocoding)
     {
-        throw new NotImplementedException();
+        Preamble();
+
+        string query = """
+            SELECT *
+            FROM [locations] 
+            WHERE [address] LIKE @loc;
+            """;
+        SqliteCommand comm = conn.CreateCommand();
+        comm.CommandText = query;
+        await comm.PrepareAsync();
+        comm.Parameters.AddWithValue("@loc", location);
+        Location toRet = new Location();
+        try 
+        {
+            DataTable dt = new DataTable();
+            DbDataReader res = await comm.ExecuteReaderAsync();
+            dt.Load(res);
+            long idToEdit = 0;
+            if (dt.Rows.Count == 0) 
+            { 
+                // not found, need to insert new location
+                if (geocoding is not null)
+                {
+                    Location geocodedLoc = (await geocoding.GetLocationsAsync(location)).FirstOrDefault();
+                    toRet.Latitude = geocodedLoc.Latitude;
+                    toRet.Longitude = geocodedLoc.Longitude;
+
+                    query = """
+                    INSERT INTO [locations] ([address],[latitude],[longitude])
+                    VALUES (@add,@lat,@lon);
+                    """;
+                    SqliteCommand insertComm = conn.CreateCommand();
+                    insertComm.CommandText = query;
+                    await insertComm.PrepareAsync();
+                    insertComm.Parameters.AddWithValue("@add", location);
+                    insertComm.Parameters.AddWithValue("@lat", geocodedLoc.Latitude);
+                    insertComm.Parameters.AddWithValue("@lon", geocodedLoc.Longitude);
+
+                    int rowsInserted = await insertComm.ExecuteNonQueryAsync();
+                    if (rowsInserted < 1) 
+                    {
+                        Log.Warn($"UpdateUserLocation - {query}", "No rows inserted");
+                    }
+                    query = "select last_insert_rowid();";
+                    comm.CommandText = query;
+                    idToEdit = (long)comm.ExecuteScalar();
+                }
+            }
+            else 
+            {
+                // found, need to edit user
+                idToEdit = dt.Rows[0].Field<long>("id");
+                toRet.Latitude = dt.Rows[0].Field<double>("latitude");
+                toRet.Longitude = dt.Rows[0].Field<double>("longitude");
+            }
+            query = """
+                UPDATE 
+                [users] 
+                SET [user_location_id] = @lId
+                WHERE [user_name] = @user;
+                """;
+            comm.CommandText = query;
+            await comm.PrepareAsync();
+            comm.Parameters.AddWithValue("@lId", idToEdit);
+            comm.Parameters.AddWithValue("@user", user);
+            int rowsUpdated = await comm.ExecuteNonQueryAsync();
+            if (rowsUpdated < 1) 
+            {
+                Log.Warn($"UpdateUserLocation - {query}", "User not affected");
+            }
+        }
+        catch (Exception ex) 
+        {
+            Log.Warn($"GetCoordinates - {query}", ex.Message);
+        }
+        finally 
+        {
+            await conn.CloseAsync();
+        }
+        return toRet;
     }
 }
