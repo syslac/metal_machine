@@ -20,11 +20,26 @@
                 <Label Text="Logged in as " />
                 <Label Text="{Binding CurrentUser}" />
             </StackLayout>
-            <Label 
-                Text="{Binding Distance}"
-                VerticalOptions="Center" 
-                HorizontalOptions="Center" />
+            <StackLayout Orientation="Horizontal" HorizontalOptions="Center">
+                <Label Text="You travelled a total of " />
+                <Label Text="{Binding Distance}" />
+                <Label Text="km driving to " />
+                <Label Text="{Binding NumConcerts}" />
+                <Label Text="concerts, averaging " />
+                <Label Text="{Binding AvgDistance}" />
+                <Label Text="km." />
+            </StackLayout>
+            <StackLayout Orientation="Horizontal" HorizontalOptions="Center">
+                <Label Text="The most was " />
+                <Label Text="{Binding MaxDistance}" />
+                <Label Text="km to" />
+                <Label Text="{Binding MaxDistancePlace}" />
+            </StackLayout>
         </VerticalStackLayout>
-        <ImageButton Grid.Column="1" Source="sweep.svg" Command="{Binding ClearCacheCommand}" HeightRequest="36" VerticalOptions="StartAndExpand"/>
+        <VerticalStackLayout Grid.Column="1" Spacing="10" >
+            <ImageButton Source="sweep.svg" Command="{Binding ClearCacheCommand}" HeightRequest="36" VerticalOptions="StartAndExpand"/>
+            <ImageButton Source="upload.svg" Command="{Binding LoadCsvCommand}" HeightRequest="36" VerticalOptions="StartAndExpand"/>
+        </VerticalStackLayout>
+        <Label Grid.Column="0" Grid.ColumnSpan="2" HorizontalOptions="CenterAndExpand" Text="{Binding CsvProgress}" IsVisible="{Binding CsvIsInProgress}" VerticalOptions="EndAndExpand" />
     </Grid>
 </v:BasePage>

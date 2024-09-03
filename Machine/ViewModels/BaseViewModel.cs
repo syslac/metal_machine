@@ -22,7 +22,7 @@ public partial class BaseViewModel : ObservableObject
         _geocoding = geo;
         _prefs = pref;
 
-        _currUser = new User(String.Empty);
+        _currUser = new User(String.Empty, -1);
         RefreshCurrentUser();
     }
 
@@ -31,9 +31,10 @@ public partial class BaseViewModel : ObservableObject
         if (_prefs is not null) 
         {
             string prefUser = _prefs.Get<string>(typeof(MetalPreferences.UserName).Name, String.Empty);
+            long prefUserId = _prefs.Get<long>(typeof(MetalPreferences.UserId).Name, -1);
             double prefLat = _prefs.Get<double>(typeof(MetalPreferences.UserLatitude).Name, 0.0);
             double prefLon = _prefs.Get<double>(typeof(MetalPreferences.UserLongitude).Name, 0.0);
-            _currUser = new User(prefUser);
+            _currUser = new User(prefUser, prefUserId);
             _currLocation = new Location(prefLat, prefLon);
         }
         OnPropertyChanged(nameof(CurrentUser));
@@ -51,6 +52,7 @@ public partial class BaseViewModel : ObservableObject
             {
                 _currUser = value;
                 _prefs.Set<string>(typeof(MetalPreferences.UserName).Name, value?.Name ?? String.Empty);
+                _prefs.Set<long>(typeof(MetalPreferences.UserId).Name, value?.Id ?? -1);
                 Location userLoc = _dbManager.GetUserLocation(value?.Name ?? String.Empty).Result;
                 _prefs.Set<double>(typeof(MetalPreferences.UserLatitude).Name, userLoc.Latitude);
                 _prefs.Set<double>(typeof(MetalPreferences.UserLongitude).Name, userLoc.Longitude);
@@ -71,9 +73,10 @@ public partial class BaseViewModel : ObservableObject
         if (_prefs is not null) 
         {
             _prefs.Set<string>(typeof(MetalPreferences.UserName).Name, String.Empty);
+            _prefs.Set<long>(typeof(MetalPreferences.UserId).Name, -1);
             _prefs.Set<double>(typeof(MetalPreferences.UserLatitude).Name, 0.0);
             _prefs.Set<double>(typeof(MetalPreferences.UserLongitude).Name, 0.0);
-            _currUser = new User(String.Empty);
+            _currUser = new User(String.Empty, -1);
             OnPropertyChanged(nameof(CurrentUser));
             OnPropertyChanged(nameof(CurrentLocation));
             OnPropertyChanged(nameof(LoggedIn));

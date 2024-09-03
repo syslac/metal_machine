@@ -54,7 +54,7 @@ public class SQLiteDBManager : IDBManager
 
     }
 
-    public async void AddAddress(string address, Location coordinates)
+    public async Task<long> AddAddress(string address, Location coordinates)
     {
         Preamble();
 
@@ -68,6 +68,7 @@ public class SQLiteDBManager : IDBManager
         comm.Parameters.AddWithValue("$add", address);
         comm.Parameters.AddWithValue("$lat", coordinates.Latitude);
         comm.Parameters.AddWithValue("$lon", coordinates.Longitude);
+        long retVal = -1;
 
         try 
         {
@@ -75,6 +76,12 @@ public class SQLiteDBManager : IDBManager
             if (rowsInserted < 1) 
             {
                 Log.Warn($"AddAddress - {query}", "No rows inserted");
+            }
+            else 
+            {
+                query = "select last_insert_rowid();";
+                comm.CommandText = query;
+                retVal = (long)comm.ExecuteScalar();
             }
         }
         catch (Exception ex) 
@@ -85,11 +92,48 @@ public class SQLiteDBManager : IDBManager
         {
             await conn.CloseAsync();
         }
+        return retVal;
     }
 
-    public async void AddConcert(string user, Concert concert)
+    public async Task<long> AddConcert(long user_id, string artist, long loc_id)
     {
-        throw new NotImplementedException();
+        Preamble();
+
+        string query = """
+        INSERT INTO [concerts] ([user_id], [concert_name], [concert_location_id])
+        VALUES (@user, @artst, @loc);
+        """;
+        SqliteCommand comm = conn.CreateCommand();
+        comm.CommandText = query;
+        await comm.PrepareAsync();
+        comm.Parameters.AddWithValue("@user", user_id);
+        comm.Parameters.AddWithValue("@artst", artist);
+        comm.Parameters.AddWithValue("@loc", loc_id);
+        long retVal = -1;
+
+        try 
+        {
+            int rowsInserted = await comm.ExecuteNonQueryAsync();
+            if (rowsInserted < 1) 
+            {
+                Log.Warn($"AddConcert - {query}", "No rows inserted");
+            }
+            else 
+            {
+                query = "select last_insert_rowid();";
+                comm.CommandText = query;
+                retVal = (long)comm.ExecuteScalar();
+            }
+        }
+        catch (Exception ex) 
+        {
+            Log.Warn($"AddAddress - {query}", ex.Message);
+        }
+        finally 
+        {
+            await conn.CloseAsync();
+        }
+        return retVal;
     }
 
     public async Task<Concert?> FindConcert(string user, string searchString)
@@ -97,12 +141,50 @@ public class SQLiteDBManager : IDBManager
         throw new NotImplementedException();
     }
 
-    public async Task<List<Concert>?> GetAllConcerts(string user)
+    public async Task<List<Concert>> GetAllConcerts(string user)
     {
-        throw new NotImplementedException();
+        Preamble();
+
+        string query = """
+            SELECT [concerts].[concert_name], [locations].[latitude], [locations].[longitude]
+            FROM [concerts] 
+            LEFT JOIN [locations] ON [concerts].[concert_location_id] = [locations].[id]
+            LEFT JOIN [users] ON [concerts].[user_id] = [users].[id]
+            WHERE [users].[user_name] LIKE @name;
+            """;
+        SqliteCommand comm = conn.CreateCommand();
+        comm.CommandText = query;
+        await comm.PrepareAsync();
+        comm.Parameters.AddWithValue("@name", user);
+        List<Concert> retVal = [];
+        try 
+        {
+            DataTable dt = new DataTable();
+            DbDataReader res = await comm.ExecuteReaderAsync();
+            dt.Load(res);
+            foreach (DataRow row in dt.Rows)
+            {
+                retVal.Add(new Concert(row.Field<string>("concert_name"), 
+                    new Location(
+                        row.Field<double>("latitude"),
+                        row.Field<double>("longitude")
+                    ),
+                    null));
+            }
+        }
+        catch (Exception ex) 
+        {
+            Log.Warn($"GetAllConcerts - {query}", ex.Message);
+            retVal = null;
+        }
+        finally 
+        {
+            await conn.CloseAsync();
+        }
+        return retVal;
     }
 
-    public async Task<Location?> GetCoordinates(string address, bool acceptAmbiguous = true)
+    public async Task<(Location?, long?)> GetCoordinates(string address, bool acceptAmbiguous = true)
     {
         Preamble();
 
@@ -111,7 +193,7 @@ public class SQLiteDBManager : IDBManager
         comm.CommandText = query;
         await comm.PrepareAsync();
         comm.Parameters.AddWithValue("@add", address);
-        Location retVal = new Location();
+        (Location?, long?) retVal = (new Location(), -1);
         try 
         {
             DataTable dt = new DataTable();
@@ -121,16 +203,18 @@ public class SQLiteDBManager : IDBManager
                 || (dt.Rows.Count > 1 && !acceptAmbiguous)
                 ) 
             { 
-                return null;
+                return (null, null);
             }
             DataRow record = dt.Rows[0];
-            retVal.Latitude = record.Field<double>("latitude");
-            retVal.Longitude = record.Field<double>("longitude");
+            retVal.Item1.Latitude = record.Field<double>("latitude");
+            retVal.Item1.Longitude = record.Field<double>("longitude");
+            retVal.Item2 = record.Field<long>("id");
         }
         catch (Exception ex) 
         {
             Log.Warn($"GetCoordinates - {query}", ex.Message);
-            retVal = null;
+            retVal.Item1 = null;
+            retVal.Item2 = null;
         }
         finally 
         {
@@ -195,7 +279,7 @@ public class SQLiteDBManager : IDBManager
             dt.Load(res);
             foreach (DataRow record in dt.Rows) 
             {
-                retVal.Add(new User(record.Field<string>("user_name")));
+                retVal.Add(new User(record.Field<string>("user_name"), record.Field<long>("id")));
             }
         }
         catch (Exception ex) 
@@ -247,7 +331,7 @@ public class SQLiteDBManager : IDBManager
         await conn.CloseAsync();
     }
 
-    public async void RegisterUser(string user)
+    public async Task<long> RegisterUser(string user)
     {
         Preamble();
 
@@ -259,6 +343,7 @@ public class SQLiteDBManager : IDBManager
         comm.CommandText = query;
         await comm.PrepareAsync();
         comm.Parameters.AddWithValue("@name", user);
+        long retVal = -1;
 
         try 
         {
@@ -266,6 +351,12 @@ public class SQLiteDBManager : IDBManager
             if (rowsInserted < 1) 
             {
                 Log.Warn($"RegisterUser - {query}", "No rows inserted");
+            }
+            else 
+            {
+                query = "select last_insert_rowid();";
+                comm.CommandText = query;
+                retVal = (long)comm.ExecuteScalar();
             }
         }
         catch (Exception ex) 
@@ -276,6 +367,7 @@ public class SQLiteDBManager : IDBManager
         {
             await conn.CloseAsync();
         }
+        return retVal;
     }
 
     public async void ReinitDb() 

@@ -13,18 +13,18 @@ public interface IDBManager
     public Task<List<User>> GetUsers();
     public Task<Location> GetUserLocation(string user);
     public Task<Location> UpdateUserLocation(string user, string location, IGeocoding? geo);
-    public void RegisterUser(string user);
+    public Task<long> RegisterUser(string user);
     // returns (lat, lon), requires address, returns null if no matches
     // or if we have more than 1 result and acceptAmbiguous is false
-    public Task<Location?> GetCoordinates(string address, bool acceptAmbiguous = true);
+    public Task<(Location?, long?)> GetCoordinates(string address, bool acceptAmbiguous = true);
     // store a new address, coordinates are always (lat, lon)
-    public void AddAddress(string address, Location coordinates);
+    public Task<long> AddAddress(string address, Location coordinates);
     // get all concerts of a single user
-    public Task<List<Concert>?> GetAllConcerts(string user);
+    public Task<List<Concert>> GetAllConcerts(string user);
     // get a single concert (best match) using a query string
     public Task<Concert?> FindConcert(string user, string searchString);
     // store a new concert
-    public void AddConcert(string user, Concert concert);
+    public Task<long> AddConcert(long user_id, string artist, long loc_id);
 
 
 }

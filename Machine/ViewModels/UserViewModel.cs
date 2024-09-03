@@ -42,15 +42,16 @@ public partial class UserViewModel : BaseViewModel
     } 
 
     [RelayCommand]
-    private async void RegisterUser()
+    private async Task RegisterUser()
     {
         if (_dbManager is not null)
         {
-            _dbManager.RegisterUser(NewUser);
+            long newId = await _dbManager.RegisterUser(NewUser);
             _users = await _dbManager.GetUsers();
             OnPropertyChanged(nameof(AvailableUsers));
+
+            _currUser = new User(NewUser, newId);
         }
-        _currUser = new User(NewUser);
         NewUser = String.Empty;
         SelectingExisting = !SelectingExisting;
         OnPropertyChanged(nameof(SelectingExisting));
@@ -60,7 +61,7 @@ public partial class UserViewModel : BaseViewModel
     } 
 
     [RelayCommand]
-    private async void UpdateLocation()
+    private async Task UpdateLocation()
     {
         if (_dbManager is not null)
         {
