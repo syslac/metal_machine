@@ -20,11 +20,11 @@ public interface IDBManager
     // store a new address, coordinates are always (lat, lon)
     public Task<long> AddAddress(string address, Location coordinates);
     // get all concerts of a single user
-    public Task<List<Concert>> GetAllConcerts(string user);
+    public Task<List<Concert>> GetAllConcerts(long user);
     // get a single concert (best match) using a query string
     public Task<Concert?> FindConcert(string user, string searchString);
     // store a new concert
-    public Task<long> AddConcert(long user_id, string artist, long loc_id);
+    public Task<long> AddConcert(long user_id, string artist, long loc_id, DateTime date);
 
 
 }

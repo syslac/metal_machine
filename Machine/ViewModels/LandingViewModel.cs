@@ -1,6 +1,8 @@
 using System;
+using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Text;
+using CommunityToolkit.Maui.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Java.Util.Logging;
@@ -45,7 +47,7 @@ public partial class LandingViewModel : BaseViewModel
         //    OnPropertyChanged(nameof(Latitude));
         //}
 
-        List<Concert> concertList = await _dbManager.GetAllConcerts(CurrentUser.Name);
+        List<Concert> concertList = await _dbManager.GetAllConcerts(CurrentUser.Id);
         _numConcerts = concertList.Count;
         _maxDistance = 0;
         foreach (var concert in concertList)
@@ -95,7 +97,7 @@ public partial class LandingViewModel : BaseViewModel
                     if (csvText is not null) 
                     {
                         string[] chunks = csvText.Split(";");
-                        if (chunks.Length >= 3) 
+                        if (chunks.Length >= 4) 
                         {
                             // [2] is the "short location"
                             long locationId;
@@ -103,6 +105,8 @@ public partial class LandingViewModel : BaseViewModel
                             if (existingCoordinates.Item2 is null)
                             {
                                 Location geocoded = (await _geocoding.GetLocationsAsync(chunks[2])).FirstOrDefault();
+                                // 1s wait to not hammer the Geocoding API
+                                await Task.Delay(1000);
                                 locationId = await _dbManager.AddAddress(chunks[2], geocoded);
                             }
                             else 
@@ -110,7 +114,8 @@ public partial class LandingViewModel : BaseViewModel
                                 locationId = existingCoordinates.Item2 ?? -1;
                             }
                             // [0] is the artist
-                            await _dbManager.AddConcert(CurrentUser.Id, chunks[0], locationId);
+                            // [3] is the date, in yyyy-mm-dd
+                            await _dbManager.AddConcert(CurrentUser.Id, chunks[0], locationId, DateTime.ParseExact(chunks[3], "yyyy-mm-dd", CultureInfo.InvariantCulture));
                         }
                     }
                     i++;
@@ -129,6 +134,15 @@ public partial class LandingViewModel : BaseViewModel
             OnPropertyChanged(nameof(CsvIsInProgress));
             OnPropertyChanged(nameof(CsvProgress));
         }
+    }
+
+    [RelayCommand]
+    public async Task DownloadDb () 
+    {
+        //using var stream = await FileSystem.AppDataDirectory.
+        //ReadLines
+        //using var stream = new MemoryStream(Encoding.Default.GetBytes("Hello from the Community Toolkit!"));
+        //var fileSaverResult = await FileSaver.Default.SaveAsync("test.db", stream, null);   
     }
 
 }

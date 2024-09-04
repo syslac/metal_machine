@@ -7,6 +7,8 @@ using System.Data.Common;
 using System.Data;
 using Microsoft.Maui.Platform;
 using Javax.Sql;
+using System.Globalization;
+using System.Xml;
 
 namespace MetalMachine.Services;
 
@@ -25,6 +27,45 @@ public class SQLiteDBManager : IDBManager
 
         InitTables();
     }
+
+    public async void InitTables()
+    {
+        Preamble();
+        
+        string [] createQuery = ["""
+            CREATE TABLE IF NOT EXISTS users ([id] INTEGER PRIMARY KEY AUTOINCREMENT, 
+            [user_name] TEXT UNIQUE,
+            [user_location_id] INTEGER);
+        """,
+        """
+            CREATE TABLE IF NOT EXISTS concerts ([id] INTEGER PRIMARY KEY AUTOINCREMENT, 
+            [user_id] INTEGER,
+            [concert_name] TEXT,
+            [concert_location_id] INTEGER,
+            [concert_date] TEXT);
+        """,
+        """
+            CREATE TABLE IF NOT EXISTS locations ([id] INTEGER PRIMARY KEY AUTOINCREMENT, 
+            [address] TEXT UNIQUE,
+            [latitude] REAL,
+            [longitude] REAL);
+        """];
+        foreach (string query in createQuery) 
+        {
+            SqliteCommand comm = conn.CreateCommand();
+            comm.CommandText = query;
+            try 
+            {
+                int rowsInserted = await comm.ExecuteNonQueryAsync();
+            }
+            catch (Exception ex) 
+            {
+                Log.Warn($"InitTables - init-ing {query}", ex.Message);
+            }
+        }
+        await conn.CloseAsync();
+    }
+
 
     ~SQLiteDBManager() 
     {
@@ -95,13 +136,13 @@ public class SQLiteDBManager : IDBManager
         return retVal;
     }
 
-    public async Task<long> AddConcert(long user_id, string artist, long loc_id)
+    public async Task<long> AddConcert(long user_id, string artist, long loc_id, DateTime date)
     {
         Preamble();
 
         string query = """
-        INSERT INTO [concerts] ([user_id], [concert_name], [concert_location_id])
-        VALUES (@user, @artst, @loc);
+        INSERT INTO [concerts] ([user_id], [concert_name], [concert_location_id], [concert_date])
+        VALUES (@user, @artst, @loc, @date);
         """;
         SqliteCommand comm = conn.CreateCommand();
         comm.CommandText = query;
@@ -109,6 +150,7 @@ public class SQLiteDBManager : IDBManager
         comm.Parameters.AddWithValue("@user", user_id);
         comm.Parameters.AddWithValue("@artst", artist);
         comm.Parameters.AddWithValue("@loc", loc_id);
+        comm.Parameters.AddWithValue("@date", date.ToString("s"));
         long retVal = -1;
 
         try 
@@ -141,25 +183,26 @@ public class SQLiteDBManager : IDBManager
         throw new NotImplementedException();
     }
 
-    public async Task<List<Concert>> GetAllConcerts(string user)
+    public async Task<List<Concert>> GetAllConcerts(long user)
     {
         Preamble();
 
-        string query = """
-            SELECT [concerts].[concert_name], [locations].[latitude], [locations].[longitude]
-            FROM [concerts] 
-            LEFT JOIN [locations] ON [concerts].[concert_location_id] = [locations].[id]
-            LEFT JOIN [users] ON [concerts].[user_id] = [users].[id]
-            WHERE [users].[user_name] LIKE @name;
-            """;
-        SqliteCommand comm = conn.CreateCommand();
-        comm.CommandText = query;
-        await comm.PrepareAsync();
-        comm.Parameters.AddWithValue("@name", user);
         List<Concert> retVal = [];
+        DataTable dt = new DataTable();
         try 
         {
-            DataTable dt = new DataTable();
+            string query = """
+                SELECT [concerts].[concert_name], [concerts].[concert_date],[locations].[latitude], [locations].[longitude], [locations].[address]
+                FROM [concerts] 
+                LEFT JOIN [locations] ON [concerts].[concert_location_id] = [locations].[id]
+                WHERE [concerts].[user_id] = @name
+                ORDER BY [concerts].[concert_date] ASC;
+                """;
+            SqliteCommand comm = conn.CreateCommand();
+            comm.CommandText = query;
+            await comm.PrepareAsync();
+            comm.Parameters.AddWithValue("@name", user);
+
             DbDataReader res = await comm.ExecuteReaderAsync();
             dt.Load(res);
             foreach (DataRow row in dt.Rows)
@@ -169,12 +212,14 @@ public class SQLiteDBManager : IDBManager
                         row.Field<double>("latitude"),
                         row.Field<double>("longitude")
                     ),
-                    null));
+                    DateTime.ParseExact(row.Field<string>("concert_date"), "s", CultureInfo.InvariantCulture),
+                    row.Field<string>("address")));
             }
         }
         catch (Exception ex) 
         {
-            Log.Warn($"GetAllConcerts - {query}", ex.Message);
+            DataRow[] errs = dt.GetErrors();
+            Log.Warn($"GetAllConcerts - ", ex.Message);
             retVal = null;
         }
         finally 
@@ -292,43 +337,6 @@ public class SQLiteDBManager : IDBManager
             await conn.CloseAsync();
         }
         return retVal;
-    }
-
-    public async void InitTables()
-    {
-        Preamble();
-        
-        string [] createQuery = ["""
-            CREATE TABLE IF NOT EXISTS users ([id] INTEGER PRIMARY KEY AUTOINCREMENT, 
-            [user_name] TEXT UNIQUE,
-            [user_location_id] INTEGER);
-        """,
-        """
-            CREATE TABLE IF NOT EXISTS concerts ([id] INTEGER PRIMARY KEY AUTOINCREMENT, 
-            [user_id] INTEGER,
-            [concert_name] TEXT,
-            [concert_location_id] INTEGER);
-        """,
-        """
-            CREATE TABLE IF NOT EXISTS locations ([id] INTEGER PRIMARY KEY AUTOINCREMENT, 
-            [address] TEXT UNIQUE,
-            [latitude] REAL,
-            [longitude] REAL);
-        """];
-        foreach (string query in createQuery) 
-        {
-            SqliteCommand comm = conn.CreateCommand();
-            comm.CommandText = query;
-            try 
-            {
-                int rowsInserted = await comm.ExecuteNonQueryAsync();
-            }
-            catch (Exception ex) 
-            {
-                Log.Warn($"InitTables - init-ing {query}", ex.Message);
-            }
-        }
-        await conn.CloseAsync();
     }
 
     public async Task<long> RegisterUser(string user)

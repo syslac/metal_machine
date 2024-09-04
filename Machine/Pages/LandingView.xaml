@@ -39,6 +39,7 @@
         <VerticalStackLayout Grid.Column="1" Spacing="10" >
             <ImageButton Source="sweep.svg" Command="{Binding ClearCacheCommand}" HeightRequest="36" VerticalOptions="StartAndExpand"/>
             <ImageButton Source="upload.svg" Command="{Binding LoadCsvCommand}" HeightRequest="36" VerticalOptions="StartAndExpand"/>
+            <ImageButton Source="download.svg" Command="{Binding DownloadDbCommand}" HeightRequest="36" VerticalOptions="StartAndExpand"/>
         </VerticalStackLayout>
         <Label Grid.Column="0" Grid.ColumnSpan="2" HorizontalOptions="CenterAndExpand" Text="{Binding CsvProgress}" IsVisible="{Binding CsvIsInProgress}" VerticalOptions="EndAndExpand" />
     </Grid>
