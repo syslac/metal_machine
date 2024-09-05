@@ -11,16 +11,173 @@
             <ColumnDefinition Width="9*" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
-        <VerticalStackLayout Spacing="10" Grid.Column="0">
-            <Label 
-                Text="Welcome to Metal Machine"
-                VerticalOptions="Center" 
-                HorizontalOptions="Center" />
-            <StackLayout Orientation="Horizontal" VerticalOptions="Center" HorizontalOptions="Center">
-                <Label Text="Logged in as " />
-                <Label Text="{Binding CurrentUser}" />
-            </StackLayout>
-            <StackLayout Orientation="Horizontal" HorizontalOptions="Center">
+        <Grid Grid.Column="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height=".2*" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <!-- Header: user info -->
+            <VerticalStackLayout Spacing="10" Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="0">
+                <Label 
+                    Text="Welcome to Metal Machine"
+                    VerticalOptions="Center" 
+                    HorizontalOptions="Center" />
+                <StackLayout Orientation="Horizontal" VerticalOptions="Center" HorizontalOptions="Center">
+                    <Label Text="Logged in as " />
+                    <Label Text="{Binding CurrentUser}" />
+                </StackLayout>
+            </VerticalStackLayout>
+
+            <!-- main grid -->
+            <Grid Grid.Row="1" Grid.Column="0">
+                <Image IsVisible="{Binding ShowDistance,Converter={StaticResource not}}" Source="world.svg" WidthRequest="96" VerticalOptions="Center" HorizontalOptions="Center" >
+                    <Image.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding ToggleVisibleCommand}" CommandParameter="{x:Byte 1}" />
+                    </Image.GestureRecognizers>
+                </Image>
+                <VerticalStackLayout IsVisible="{Binding ShowDistance}" HorizontalOptions="Center" VerticalOptions="CenterAndExpand">
+                    <StackLayout Orientation="Horizontal" HorizontalOptions="Center">
+                        <Label Text="{Binding Distance}" FontSize="48" FontAttributes="Bold" />
+                        <Label Text="Km" FontSize="24" />
+                    </StackLayout>
+                    <Label Text="Tot. distance" HorizontalOptions="Center" FontAttributes="Italic" TextColor="#b3b3b3" />
+                    <VerticalStackLayout.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding ToggleVisibleCommand}" CommandParameter="{x:Byte 1}" />
+                    </VerticalStackLayout.GestureRecognizers>
+                </VerticalStackLayout>
+            </Grid>
+
+            <Grid Grid.Row="1" Grid.Column="1">
+                <Image IsVisible="{Binding ShowNumTrips,Converter={StaticResource not}}" Source="car.svg" WidthRequest="96" VerticalOptions="Center" HorizontalOptions="Center" >
+                    <Image.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding ToggleVisibleCommand}" CommandParameter="{x:Byte 2}" />
+                    </Image.GestureRecognizers>
+                </Image>
+                <VerticalStackLayout IsVisible="{Binding ShowNumTrips}" HorizontalOptions="Center" VerticalOptions="CenterAndExpand">
+                    <StackLayout Orientation="Horizontal" HorizontalOptions="Center">
+                        <Label Text="{Binding NumEstimatedTrips}" FontSize="48" FontAttributes="Bold" />
+                    </StackLayout>
+                    <Label Text="# Trips" HorizontalOptions="Center" FontAttributes="Italic" TextColor="#b3b3b3" />
+                    <VerticalStackLayout.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding ToggleVisibleCommand}" CommandParameter="{x:Byte 2}" />
+                    </VerticalStackLayout.GestureRecognizers>
+                </VerticalStackLayout>
+            </Grid>
+
+            <Grid Grid.Row="2" Grid.Column="0">
+                <Image IsVisible="{Binding ShowNumConcerts,Converter={StaticResource not}}" Source="music.svg" WidthRequest="96" VerticalOptions="Center" HorizontalOptions="Center" >
+                    <Image.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding ToggleVisibleCommand}" CommandParameter="{x:Byte 3}" />
+                    </Image.GestureRecognizers>
+                </Image>
+                <VerticalStackLayout IsVisible="{Binding ShowNumConcerts}" HorizontalOptions="Center" VerticalOptions="CenterAndExpand">
+                    <StackLayout Orientation="Horizontal" HorizontalOptions="Center">
+                        <Label Text="{Binding NumConcerts}" FontSize="48" FontAttributes="Bold" />
+                    </StackLayout>
+                    <Label Text="# Concerts" HorizontalOptions="Center" FontAttributes="Italic" TextColor="#b3b3b3" />
+                    <VerticalStackLayout.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding ToggleVisibleCommand}" CommandParameter="{x:Byte 3}" />
+                    </VerticalStackLayout.GestureRecognizers>
+                </VerticalStackLayout>
+            </Grid>
+
+            <Grid Grid.Row="2" Grid.Column="1">
+                <Image IsVisible="{Binding ShowNumDays,Converter={StaticResource not}}" Source="calendar.svg" WidthRequest="96" VerticalOptions="Center" HorizontalOptions="Center" >
+                    <Image.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding ToggleVisibleCommand}" CommandParameter="{x:Byte 4}" />
+                    </Image.GestureRecognizers>
+                </Image>
+                <VerticalStackLayout IsVisible="{Binding ShowNumDays}" HorizontalOptions="Center" VerticalOptions="CenterAndExpand">
+                    <StackLayout Orientation="Horizontal" HorizontalOptions="Center">
+                        <Label Text="{Binding NumDays}" FontSize="48" FontAttributes="Bold" />
+                        <Label Text="d" FontSize="24" />
+                    </StackLayout>
+                    <Label Text="Tot. days" HorizontalOptions="Center" FontAttributes="Italic" TextColor="#b3b3b3" />
+                    <VerticalStackLayout.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding ToggleVisibleCommand}" CommandParameter="{x:Byte 4}" />
+                    </VerticalStackLayout.GestureRecognizers>
+                </VerticalStackLayout>
+            </Grid>
+
+            <Grid Grid.Row="3" Grid.Column="0">
+                <Image IsVisible="{Binding ShowMaxDistance,Converter={StaticResource not}}" Source="top.svg" WidthRequest="96" VerticalOptions="Center" HorizontalOptions="Center" >
+                    <Image.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding ToggleVisibleCommand}" CommandParameter="{x:Byte 5}" />
+                    </Image.GestureRecognizers>
+                </Image>
+                <VerticalStackLayout IsVisible="{Binding ShowMaxDistance}" HorizontalOptions="Center" VerticalOptions="CenterAndExpand">
+                    <StackLayout Orientation="Horizontal" HorizontalOptions="Center">
+                        <Label Text="{Binding MaxDistance}" FontSize="48" FontAttributes="Bold" />
+                        <Label Text="Km" FontSize="24" />
+                    </StackLayout>
+                    <Label Text="Max distance" HorizontalOptions="Center" FontAttributes="Italic" TextColor="#b3b3b3" />
+                    <VerticalStackLayout.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding ToggleVisibleCommand}" CommandParameter="{x:Byte 5}" />
+                    </VerticalStackLayout.GestureRecognizers>
+                </VerticalStackLayout>
+            </Grid>
+
+            <Grid Grid.Row="3" Grid.Column="1">
+                <Image IsVisible="{Binding ShowMaxDistancePlace,Converter={StaticResource not}}" Source="route.svg" WidthRequest="96" VerticalOptions="Center" HorizontalOptions="Center" >
+                    <Image.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding ToggleVisibleCommand}" CommandParameter="{x:Byte 6}" />
+                    </Image.GestureRecognizers>
+                </Image>
+                <VerticalStackLayout IsVisible="{Binding ShowMaxDistancePlace}" HorizontalOptions="Center" VerticalOptions="CenterAndExpand">
+                    <StackLayout Orientation="Horizontal" HorizontalOptions="Center">
+                        <Label Text="{Binding MaxDistancePlace}" FontSize="32" FontAttributes="Bold" />
+                    </StackLayout>
+                    <Label Text="Max distance" HorizontalOptions="Center" FontAttributes="Italic" TextColor="#b3b3b3" />
+                    <VerticalStackLayout.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding ToggleVisibleCommand}" CommandParameter="{x:Byte 6}" />
+                    </VerticalStackLayout.GestureRecognizers>
+                </VerticalStackLayout>
+            </Grid>
+
+            <Grid Grid.Row="4" Grid.Column="0">
+                <Image IsVisible="{Binding ShowAvgDistance,Converter={StaticResource not}}" Source="chart.svg" WidthRequest="96" VerticalOptions="Center" HorizontalOptions="Center" >
+                    <Image.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding ToggleVisibleCommand}" CommandParameter="{x:Byte 7}" />
+                    </Image.GestureRecognizers>
+                </Image>
+                <VerticalStackLayout IsVisible="{Binding ShowAvgDistance}" HorizontalOptions="Center" VerticalOptions="CenterAndExpand">
+                    <StackLayout Orientation="Horizontal" HorizontalOptions="Center">
+                        <Label Text="{Binding AvgDistance}" FontSize="48" FontAttributes="Bold" />
+                        <Label Text="Km" FontSize="24" />
+                    </StackLayout>
+                    <Label Text="Avg. distance" HorizontalOptions="Center" FontAttributes="Italic" TextColor="#b3b3b3" />
+                    <VerticalStackLayout.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding ToggleVisibleCommand}" CommandParameter="{x:Byte 7}" />
+                    </VerticalStackLayout.GestureRecognizers>
+                </VerticalStackLayout>
+            </Grid>
+
+            <Grid Grid.Row="4" Grid.Column="1">
+                <Image IsVisible="{Binding ShowMaxDistanceBand,Converter={StaticResource not}}" Source="group.svg" WidthRequest="96" VerticalOptions="Center" HorizontalOptions="Center" >
+                    <Image.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding ToggleVisibleCommand}" CommandParameter="{x:Byte 8}" />
+                    </Image.GestureRecognizers>
+                </Image>
+                <VerticalStackLayout IsVisible="{Binding ShowMaxDistanceBand}" HorizontalOptions="Center" VerticalOptions="CenterAndExpand">
+                    <StackLayout Orientation="Horizontal" HorizontalOptions="Center">
+                        <Label Text="{Binding MaxDistanceBand}" FontSize="32" FontAttributes="Bold" />
+                    </StackLayout>
+                    <Label Text="Travelled most for" HorizontalOptions="Center" FontAttributes="Italic" TextColor="#b3b3b3" />
+                    <VerticalStackLayout.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding ToggleVisibleCommand}" CommandParameter="{x:Byte 8}" />
+                    </VerticalStackLayout.GestureRecognizers>
+                </VerticalStackLayout>
+            </Grid>
+        </Grid>
+        <!--    <StackLayout Orientation="Horizontal" HorizontalOptions="Center">
                 <Label Text="You travelled a total of " />
                 <Label Text="{Binding Distance}" />
                 <Label Text="km driving to " />
@@ -35,7 +192,7 @@
                 <Label Text="km to" />
                 <Label Text="{Binding MaxDistancePlace}" />
             </StackLayout>
-        </VerticalStackLayout>
+        </VerticalStackLayout>-->
         <VerticalStackLayout Grid.Column="1" Spacing="10" >
             <ImageButton Source="sweep.svg" Command="{Binding ClearCacheCommand}" HeightRequest="36" VerticalOptions="StartAndExpand"/>
             <ImageButton Source="upload.svg" Command="{Binding LoadCsvCommand}" HeightRequest="36" VerticalOptions="StartAndExpand"/>

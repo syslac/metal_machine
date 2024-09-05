@@ -13,24 +13,36 @@ namespace MetalMachine.ViewModels;
 
 public partial class LandingViewModel : BaseViewModel
 {
-    private double _latitude;
     private double _distance;
     private double _maxDistance;
     private string _maxDistancePlace;
+    private string _maxDistanceBand;
     private double _avgDistance;
     private long _numConcerts;
+    private long _numDays;
+    private long _numEstimatedTrips;
     public LandingViewModel(IDBManager db, IGeocoding g, IPreferences p) : base(db, g, p) 
     {
         CsvIsInProgress = false;
         CsvProgress = String.Empty;
     }
 
-    public string Latitude => String.Format("{0}", _latitude);
-    public string Distance => String.Format("{0}", _distance);
-    public string MaxDistance => String.Format("{0}", _maxDistance);
-    public string AvgDistance => String.Format("{0}", _avgDistance);
-    public string NumConcerts => String.Format("{0}", _numConcerts);
-    public string MaxDistancePlace => _maxDistancePlace;
+    public string Distance => _distance.ToString("n2");
+    public bool ShowDistance { get; set; }
+    public string MaxDistance => _maxDistance.ToString("n2");
+    public bool ShowMaxDistance { get; set; }
+    public string AvgDistance => _avgDistance.ToString("n2");
+    public bool ShowAvgDistance { get; set; }
+    public string NumConcerts => _numConcerts.ToString();
+    public bool ShowNumConcerts { get; set; }
+    public string NumDays => _numDays.ToString();
+    public bool ShowNumDays { get; set; }
+    public string NumEstimatedTrips => _numEstimatedTrips.ToString();
+    public bool ShowNumTrips { get; set; }
+    public string MaxDistancePlace => ((_maxDistancePlace?.IndexOf(',') ?? -1) >= 0) ? _maxDistancePlace?.Substring(0, _maxDistancePlace?.IndexOf(',') ?? 0) ?? "" : _maxDistancePlace;
+    public bool ShowMaxDistancePlace { get; set; }
+    public string MaxDistanceBand => _maxDistanceBand;
+    public bool ShowMaxDistanceBand { get; set; }
 
     public string CsvProgress { get; set; }
     public bool CsvIsInProgress { get; set; }
@@ -47,25 +59,66 @@ public partial class LandingViewModel : BaseViewModel
         //    OnPropertyChanged(nameof(Latitude));
         //}
 
-        List<Concert> concertList = await _dbManager.GetAllConcerts(CurrentUser.Id);
-        _numConcerts = concertList.Count;
+        List<Concert> concertList = (await _dbManager.GetAllConcerts(CurrentUser.Id)) ?? [];
+        _numConcerts = concertList?.Count ?? 0;
+        _numDays = 0;
+        _numEstimatedTrips = 0;
         _maxDistance = 0;
+        Concert prevConcert = null;
+        Dictionary<string, double> bandCompetition = [];
         foreach (var concert in concertList)
         {
-            double dist = Location.CalculateDistance(CurrentLocation, concert.Address, DistanceUnits.Kilometers);
-            _distance += dist;
-            _avgDistance += dist/(double)_numConcerts;
-            if (dist > _maxDistance)
+            if (prevConcert is null 
+                ||prevConcert?.Date.Year != concert.Date.Year 
+                || prevConcert?.Date.Month != concert.Date.Month
+                || prevConcert?.Date.Day != concert.Date.Day
+                ) 
             {
-                _maxDistance = dist;
-                _maxDistancePlace = concert.AddressName;
+                _numDays++;
+            }
+            if (prevConcert is null
+                || concert.didTravelBetweenConcerts(prevConcert, CurrentLocation) != false)
+            {
+                double dist = Location.CalculateDistance(CurrentLocation, concert.Address, DistanceUnits.Kilometers);
+                _distance += dist;
+                _avgDistance += dist;
+                if (dist > _maxDistance)
+                {
+                    _maxDistance = dist;
+                    _maxDistancePlace = concert.AddressName;
+                }
+                _numEstimatedTrips++;
+                if (bandCompetition.TryGetValue(concert.Name, out double currKm)) 
+                {
+                    bandCompetition[concert.Name] = currKm + dist;
+                }
+                else 
+                {
+                    bandCompetition.Add(concert.Name, dist);
+                }
+            }
+            prevConcert = concert;
+        }
+        _avgDistance /= (double)_numEstimatedTrips;
+        (string, double) maxBand = ("", 0);
+        foreach (var el in bandCompetition) 
+        {
+            if (el.Value > maxBand.Item2) 
+            {
+                maxBand.Item1 = el.Key;
+                maxBand.Item2 = el.Value;
             }
         }
+        _maxDistanceBand = maxBand.Item1;
+
         OnPropertyChanged(nameof(Distance));
         OnPropertyChanged(nameof(AvgDistance));
         OnPropertyChanged(nameof(MaxDistance));
         OnPropertyChanged(nameof(MaxDistancePlace));
         OnPropertyChanged(nameof(NumConcerts));
+        OnPropertyChanged(nameof(NumDays));
+        OnPropertyChanged(nameof(NumEstimatedTrips));
+        OnPropertyChanged(nameof(MaxDistanceBand));
     }
 
     [RelayCommand]
@@ -136,6 +189,47 @@ public partial class LandingViewModel : BaseViewModel
         }
     }
 
+    [RelayCommand]
+    public void ToggleVisible (byte iconNum) 
+    {
+        switch (iconNum)
+        {
+            case 0x01:
+                ShowDistance = !ShowDistance;
+                OnPropertyChanged(nameof(ShowDistance));
+                break;
+            case 0x02:
+                ShowNumTrips = !ShowNumTrips;
+                OnPropertyChanged(nameof(ShowNumTrips));
+                break;
+            case 0x03:
+                ShowNumConcerts = !ShowNumConcerts;
+                OnPropertyChanged(nameof(ShowNumConcerts));
+                break;
+            case 0x04:
+                ShowNumDays = !ShowNumDays;
+                OnPropertyChanged(nameof(ShowNumDays));
+                break;
+            case 0x05:
+                ShowMaxDistance = !ShowMaxDistance;
+                OnPropertyChanged(nameof(ShowMaxDistance));
+                break;
+            case 0x06:
+                ShowMaxDistancePlace = !ShowMaxDistancePlace;
+                OnPropertyChanged(nameof(ShowMaxDistancePlace));
+                break;
+            case 0x07:
+                ShowAvgDistance = !ShowAvgDistance;
+                OnPropertyChanged(nameof(ShowAvgDistance));
+                break;
+            case 0x08:
+                ShowMaxDistanceBand = !ShowMaxDistanceBand;
+                OnPropertyChanged(nameof(ShowMaxDistanceBand));
+                break;
+            default:
+                break;
+        }
+    }
     [RelayCommand]
     public async Task DownloadDb () 
     {

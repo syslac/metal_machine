@@ -46,7 +46,7 @@ public class SQLiteDBManager : IDBManager
         """,
         """
             CREATE TABLE IF NOT EXISTS locations ([id] INTEGER PRIMARY KEY AUTOINCREMENT, 
-            [address] TEXT UNIQUE,
+            [address] TEXT,
             [latitude] REAL,
             [longitude] REAL);
         """];
