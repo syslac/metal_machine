@@ -33,6 +33,8 @@ public partial class UserViewModel : BaseViewModel
     public string NewLocation { get; set; }
 
     public bool SelectingExisting { get; set; }
+    public string CurrentLat => CurrentLocation.Latitude.ToString("n2");
+    public string CurrentLon => CurrentLocation.Longitude.ToString("n2");
 
     [RelayCommand]
     private void SwitchExistingNew()
@@ -68,7 +70,8 @@ public partial class UserViewModel : BaseViewModel
             Location storedLocation = await _dbManager.UpdateUserLocation(CurrentUser.Name, NewLocation, _geocoding);
             _prefs.Set<double>(typeof(MetalPreferences.UserLatitude).Name, storedLocation.Latitude);
             _prefs.Set<double>(typeof(MetalPreferences.UserLongitude).Name, storedLocation.Longitude);
-            OnPropertyChanged(nameof(CurrentLocation));
+            OnPropertyChanged(nameof(CurrentLat));
+            OnPropertyChanged(nameof(CurrentLon));
         }
     } 
 

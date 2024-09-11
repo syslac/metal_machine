@@ -8,7 +8,6 @@
              Title="LandingView">
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="9*" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
         <Grid Grid.Column="0">
@@ -177,27 +176,11 @@
                 </VerticalStackLayout>
             </Grid>
         </Grid>
-        <!--    <StackLayout Orientation="Horizontal" HorizontalOptions="Center">
-                <Label Text="You travelled a total of " />
-                <Label Text="{Binding Distance}" />
-                <Label Text="km driving to " />
-                <Label Text="{Binding NumConcerts}" />
-                <Label Text="concerts, averaging " />
-                <Label Text="{Binding AvgDistance}" />
-                <Label Text="km." />
-            </StackLayout>
-            <StackLayout Orientation="Horizontal" HorizontalOptions="Center">
-                <Label Text="The most was " />
-                <Label Text="{Binding MaxDistance}" />
-                <Label Text="km to" />
-                <Label Text="{Binding MaxDistancePlace}" />
-            </StackLayout>
-        </VerticalStackLayout>-->
-        <VerticalStackLayout Grid.Column="1" Spacing="10" >
+        <!--<VerticalStackLayout Grid.Column="1" Spacing="10" >
             <ImageButton Source="sweep.svg" Command="{Binding ClearCacheCommand}" HeightRequest="36" VerticalOptions="StartAndExpand"/>
             <ImageButton Source="upload.svg" Command="{Binding LoadCsvCommand}" HeightRequest="36" VerticalOptions="StartAndExpand"/>
             <ImageButton Source="download.svg" Command="{Binding DownloadDbCommand}" HeightRequest="36" VerticalOptions="StartAndExpand"/>
-        </VerticalStackLayout>
-        <Label Grid.Column="0" Grid.ColumnSpan="2" HorizontalOptions="CenterAndExpand" Text="{Binding CsvProgress}" IsVisible="{Binding CsvIsInProgress}" VerticalOptions="EndAndExpand" />
+        </VerticalStackLayout>-->
+        <Label Grid.Column="0" Grid.ColumnSpan="2" HorizontalOptions="CenterAndExpand" Text="{Binding CsvProgress}" IsVisible="{Binding CsvIsInProgress}" VerticalOptions="EndAndExpand" TextColor="DarkRed"/>
     </Grid>
 </v:BasePage>

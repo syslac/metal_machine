@@ -43,12 +43,14 @@ public static class MauiProgram
 	{
 		builder.Services.AddSingleton<LandingView>();
 		builder.Services.AddSingleton<UserView>();
+		builder.Services.AddSingleton<MaintenanceView>();
 		return builder;
 	}
 	public static MauiAppBuilder RegisterViewModels(this MauiAppBuilder builder) 
 	{
 		builder.Services.AddSingleton<LandingViewModel>();
 		builder.Services.AddSingleton<UserViewModel>();
+		builder.Services.AddSingleton<MaintenanceViewModel>();
 		return builder;
 	}
 }

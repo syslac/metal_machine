@@ -26,6 +26,9 @@ public partial class BaseViewModel : ObservableObject
         RefreshCurrentUser();
     }
 
+    public string CsvProgress { get; set; }
+    public bool CsvIsInProgress { get; set; }
+
     private void RefreshCurrentUser() 
     {
         if (_prefs is not null) 

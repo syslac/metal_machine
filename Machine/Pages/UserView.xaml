@@ -5,6 +5,7 @@
              xmlns:vm="clr-namespace:MetalMachine.ViewModels"
              x:DataType="vm:UserViewModel"
              x:Class="MetalMachine.Pages.UserView"
+             HideSoftInputOnTapped="True"
              Title="UserView">
     <Grid ColumnSpacing="5" RowSpacing="2" HeightRequest="150" VerticalOptions="StartAndExpand">
         <Grid.RowDefinitions>
@@ -21,7 +22,8 @@
         <Label Grid.Row="0" Grid.Column="0" Text="Current User:" HorizontalOptions="EndAndExpand" />
         <StackLayout Orientation="Horizontal" Grid.Row="0" Grid.Column="1" Spacing="10">
             <Label Text="{Binding CurrentUser}" HorizontalOptions="StartAndExpand" FontAttributes="Bold" />
-            <Label Text="{Binding CurrentLocation}" HorizontalOptions="StartAndExpand" FontAttributes="Italic" />
+            <Label Text="{Binding CurrentLat}" HorizontalOptions="StartAndExpand" FontAttributes="Italic" />
+            <Label Text="{Binding CurrentLon}" HorizontalOptions="StartAndExpand" FontAttributes="Italic" />
         </StackLayout>
         <ImageButton Grid.Row="0" Grid.Column="2" Source="sweep.svg" WidthRequest="32" Command="{Binding LogoutCommand}" />
         <!-- second row: insert or select user -->

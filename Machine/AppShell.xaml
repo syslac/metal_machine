@@ -6,6 +6,7 @@
     xmlns:local="clr-namespace:MetalMachine"
     xmlns:v="clr-namespace:MetalMachine.Pages"
     Shell.FlyoutBehavior="Flyout"
+    Shell.TabBarIsVisible="False"
     Title="MetalMachine">
 
     <FlyoutItem FlyoutDisplayOptions="AsMultipleItems">
@@ -17,6 +18,10 @@
             Title="UserPage"
             ContentTemplate="{DataTemplate v:UserView}"
             Route="UserViewModel" />
+        <ShellContent
+            Title="MaintenancePage"
+            ContentTemplate="{DataTemplate v:MaintenanceView}"
+            Route="MaintenanceViewModel" />
     </FlyoutItem>
 
     <ShellContent

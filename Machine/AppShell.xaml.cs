@@ -22,6 +22,7 @@ public partial class AppShell : Shell
 	{
 		Routing.RegisterRoute(typeof(LandingViewModel).Name, typeof(LandingView));
 		Routing.RegisterRoute(typeof(UserViewModel).Name, typeof(UserView));
+		Routing.RegisterRoute(typeof(MaintenanceViewModel).Name, typeof(MaintenanceView));
 	} 
 	public static async void NavigateToLandingPage() 
 	{

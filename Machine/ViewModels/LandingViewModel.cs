@@ -25,6 +25,7 @@ public partial class LandingViewModel : BaseViewModel
     {
         CsvIsInProgress = false;
         CsvProgress = String.Empty;
+        LastUserLocation = new Location(0, 0);
     }
 
     public string Distance => _distance.ToString("n2");
@@ -47,20 +48,40 @@ public partial class LandingViewModel : BaseViewModel
     public string CsvProgress { get; set; }
     public bool CsvIsInProgress { get; set; }
 
+    public Location LastUserLocation { get; set; }
+
     public override async Task OnAppearing() 
     {
         await base.OnAppearing();
-        // test code, no longer needed
-        //_dbManager.AddAddress("Test", new Location(45.5, 12.5));
-        //Location? res = await _dbManager.GetCoordinates("Test");
-        //if (res is not null) 
-        //{
-        //    _latitude = res?.Latitude ?? 0;
-        //    OnPropertyChanged(nameof(Latitude));
-        //}
+
+        if (LastUserLocation != CurrentLocation) 
+        {
+            LastUserLocation = CurrentLocation;
+            await LoadData();
+        }
+
+        OnPropertyChanged(nameof(Distance));
+        OnPropertyChanged(nameof(AvgDistance));
+        OnPropertyChanged(nameof(MaxDistance));
+        OnPropertyChanged(nameof(MaxDistancePlace));
+        OnPropertyChanged(nameof(NumConcerts));
+        OnPropertyChanged(nameof(NumDays));
+        OnPropertyChanged(nameof(NumEstimatedTrips));
+        OnPropertyChanged(nameof(MaxDistanceBand));
+    }
+
+    private async Task LoadData() 
+    {
+        
+        CsvIsInProgress = true;
+        CsvProgress = "Loading";
+        OnPropertyChanged(nameof(CsvIsInProgress));
+        OnPropertyChanged(nameof(CsvProgress));
 
         List<Concert> concertList = (await _dbManager.GetAllConcerts(CurrentUser.Id)) ?? [];
         _numConcerts = concertList?.Count ?? 0;
+        _distance = 0;
+        _avgDistance = 0;
         _numDays = 0;
         _numEstimatedTrips = 0;
         _maxDistance = 0;
@@ -97,6 +118,22 @@ public partial class LandingViewModel : BaseViewModel
                     bandCompetition.Add(concert.Name, dist);
                 }
             }
+            // even if there was no travel from previous concert to this one,
+            // we should count it towards bands totals, otherwise this makes
+            // no sense (only 1st band of festival gets counted, e.g.)
+            else if (prevConcert is not null && concert.didTravelBetweenConcerts(prevConcert, CurrentLocation) == false) 
+            {
+                double dist = Location.CalculateDistance(CurrentLocation, concert.Address, DistanceUnits.Kilometers);
+                if (bandCompetition.TryGetValue(concert.Name, out double currKm)) 
+                {
+                    bandCompetition[concert.Name] = currKm + dist;
+                }
+                else 
+                {
+                    bandCompetition.Add(concert.Name, dist);
+                }
+
+            }
             prevConcert = concert;
         }
         _avgDistance /= (double)_numEstimatedTrips;
@@ -111,82 +148,10 @@ public partial class LandingViewModel : BaseViewModel
         }
         _maxDistanceBand = maxBand.Item1;
 
-        OnPropertyChanged(nameof(Distance));
-        OnPropertyChanged(nameof(AvgDistance));
-        OnPropertyChanged(nameof(MaxDistance));
-        OnPropertyChanged(nameof(MaxDistancePlace));
-        OnPropertyChanged(nameof(NumConcerts));
-        OnPropertyChanged(nameof(NumDays));
-        OnPropertyChanged(nameof(NumEstimatedTrips));
-        OnPropertyChanged(nameof(MaxDistanceBand));
-    }
-
-    [RelayCommand]
-    public void ClearCache () 
-    {
-        _dbManager.ReinitDb();
-    }
-
-    [RelayCommand]
-    public async Task LoadCsv () 
-    {
-        try 
-        {
-            var result = await FilePicker.PickAsync(PickOptions.Default);
-            if (result is not null) 
-            {
-                CsvIsInProgress = true;
-                CsvProgress = "Loading CSV...";
-                OnPropertyChanged(nameof(CsvIsInProgress));
-                OnPropertyChanged(nameof(CsvProgress));
-
-                using var stream = await result.OpenReadAsync();
-                StreamReader reader = new StreamReader(stream, Encoding.UTF8);
-                string csvText = String.Empty;
-                int i = 0;
-                while (csvText is not null) 
-                {
-                    csvText = await reader?.ReadLineAsync();
-                    if (csvText is not null) 
-                    {
-                        string[] chunks = csvText.Split(";");
-                        if (chunks.Length >= 4) 
-                        {
-                            // [2] is the "short location"
-                            long locationId;
-                            (Location?, long?) existingCoordinates = await _dbManager.GetCoordinates(chunks[2]);
-                            if (existingCoordinates.Item2 is null)
-                            {
-                                Location geocoded = (await _geocoding.GetLocationsAsync(chunks[2])).FirstOrDefault();
-                                // 1s wait to not hammer the Geocoding API
-                                await Task.Delay(1000);
-                                locationId = await _dbManager.AddAddress(chunks[2], geocoded);
-                            }
-                            else 
-                            {
-                                locationId = existingCoordinates.Item2 ?? -1;
-                            }
-                            // [0] is the artist
-                            // [3] is the date, in yyyy-mm-dd
-                            await _dbManager.AddConcert(CurrentUser.Id, chunks[0], locationId, DateTime.ParseExact(chunks[3], "yyyy-MM-dd", CultureInfo.InvariantCulture));
-                        }
-                    }
-                    i++;
-                    CsvProgress = $"Added {i} concerts";
-                    OnPropertyChanged(nameof(CsvProgress));
-                }
-            }
-        }
-        catch (Exception e) 
-        {
-        }
-        finally 
-        {
-            CsvIsInProgress = false;
-            CsvProgress = String.Empty;
-            OnPropertyChanged(nameof(CsvIsInProgress));
-            OnPropertyChanged(nameof(CsvProgress));
-        }
+        CsvIsInProgress = false;
+        CsvProgress = String.Empty;
+        OnPropertyChanged(nameof(CsvIsInProgress));
+        OnPropertyChanged(nameof(CsvProgress));
     }
 
     [RelayCommand]
@@ -229,14 +194,6 @@ public partial class LandingViewModel : BaseViewModel
             default:
                 break;
         }
-    }
-    [RelayCommand]
-    public async Task DownloadDb () 
-    {
-        //using var stream = await FileSystem.AppDataDirectory.
-        //ReadLines
-        //using var stream = new MemoryStream(Encoding.Default.GetBytes("Hello from the Community Toolkit!"));
-        //var fileSaverResult = await FileSaver.Default.SaveAsync("test.db", stream, null);   
     }
 
 }

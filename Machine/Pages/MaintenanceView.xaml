@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<v:BasePage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="MetalMachine.Pages.MaintenanceView"
+             xmlns:vm="clr-namespace:MetalMachine.ViewModels"
+             xmlns:v="clr-namespace:MetalMachine.Pages"
+             x:DataType="vm:MaintenanceViewModel"
+             Title="MaintenanceView">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height=".4*" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="3*" />
+            <RowDefinition Height="50" />
+        </Grid.RowDefinitions>
+
+        <!-- Header: user info -->
+        <VerticalStackLayout Spacing="10" Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="0">
+            <Label 
+                Text="Maintenance Operations"
+                VerticalOptions="Center" 
+                HorizontalOptions="Center" />
+        </VerticalStackLayout>
+
+        <!-- main grid -->
+        <Grid Grid.Row="1" Grid.Column="0">
+                <ImageButton Source="sweep.svg" WidthRequest="96" VerticalOptions="Center" HorizontalOptions="Center" Command="{Binding ClearCacheCommand}" />
+                <Label Text="Clear database" HorizontalOptions="Center" FontAttributes="Italic" TextColor="#b3b3b3" />
+        </Grid>
+
+        <Grid Grid.Row="1" Grid.Column="1">
+                <ImageButton Source="upload.svg" WidthRequest="96" VerticalOptions="Center" HorizontalOptions="Center" Command="{Binding LoadCsvCommand}" />
+                <Label Text="Upload CSV" HorizontalOptions="Center" FontAttributes="Italic" TextColor="#b3b3b3" />
+        </Grid>
+
+        <Grid Grid.Row="2" Grid.Column="0">
+                <ImageButton Source="download.svg" WidthRequest="96" VerticalOptions="Center" HorizontalOptions="Center" Command="{Binding DownloadDbCommand}" />
+                <Label Text="Download DB" HorizontalOptions="Center" FontAttributes="Italic" TextColor="#b3b3b3" />
+        </Grid>
+
+        <VerticalStackLayout Spacing="10" Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="4">
+            <Label Grid.Column="0" Grid.ColumnSpan="2" HorizontalOptions="CenterAndExpand" Text="{Binding CsvProgress}" IsVisible="{Binding CsvIsInProgress}" VerticalOptions="EndAndExpand" TextColor="DarkRed"/>
+        </VerticalStackLayout>
+    </Grid>
+</v:BasePage>
