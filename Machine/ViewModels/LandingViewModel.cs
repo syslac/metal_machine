@@ -168,7 +168,7 @@ public partial class LandingViewModel : BaseViewModel
                             }
                             // [0] is the artist
                             // [3] is the date, in yyyy-mm-dd
-                            await _dbManager.AddConcert(CurrentUser.Id, chunks[0], locationId, DateTime.ParseExact(chunks[3], "yyyy-mm-dd", CultureInfo.InvariantCulture));
+                            await _dbManager.AddConcert(CurrentUser.Id, chunks[0], locationId, DateTime.ParseExact(chunks[3], "yyyy-MM-dd", CultureInfo.InvariantCulture));
                         }
                     }
                     i++;
