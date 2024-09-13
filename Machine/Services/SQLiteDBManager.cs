@@ -138,7 +138,6 @@ public class SQLiteDBManager : IDBManager
 
     public async Task<long> AddConcert(long user_id, Concert concert)
     {
-        Preamble();
 
         long locationId;
         (Location?, long?) existingCoordinates = await GetCoordinates(concert.AddressName);
@@ -159,6 +158,10 @@ public class SQLiteDBManager : IDBManager
         {
             locationId = existingCoordinates.Item2 ?? -1;
         }
+
+        // Preamble needs to be here because calls of other class methods above
+        // will close connection at the end
+        Preamble();
 
         string query = """
         INSERT INTO [concerts] ([user_id], [concert_name], [concert_location_id], [concert_date])

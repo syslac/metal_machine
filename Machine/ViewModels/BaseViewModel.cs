@@ -2,6 +2,7 @@ using System;
 using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using MetalMachine.Models;
 using MetalMachine.Services;
 
@@ -14,15 +15,17 @@ public partial class BaseViewModel : ObservableObject
     protected IGeocoding _geocoding;
     protected IPreferences _prefs;
     protected IConcertProvider _concertProvider;
+    protected IMessenger _messenger;
     protected User _currUser;
     protected Location _currLocation;
 
-    public BaseViewModel (IDBManager dbManager, IGeocoding geo, IPreferences pref, IConcertProvider concertProvider) 
+    public BaseViewModel (IDBManager dbManager, IGeocoding geo, IPreferences pref, IConcertProvider concertProvider, IMessenger msg) 
     {
         _dbManager = dbManager;
         _geocoding = geo;
         _prefs = pref;
         _concertProvider = concertProvider;
+        _messenger = msg;
 
         _currUser = new User(String.Empty, -1);
         RefreshCurrentUser();

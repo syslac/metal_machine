@@ -7,6 +7,7 @@ using Android.Util;
 using CommunityToolkit.Maui.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using Java.Util.Logging;
 using MetalMachine.Models;
 using MetalMachine.Services;
@@ -15,7 +16,7 @@ namespace MetalMachine.ViewModels;
 
 public partial class MaintenanceViewModel : BaseViewModel
 {
-    public MaintenanceViewModel(IDBManager db, IGeocoding g, IPreferences p, IConcertProvider c) : base(db, g, p, c) 
+    public MaintenanceViewModel(IDBManager db, IGeocoding g, IPreferences p, IConcertProvider c, IMessenger m) : base(db, g, p, c, m) 
     {
         CsvIsInProgress = false;
         CsvProgress = String.Empty;
@@ -32,6 +33,7 @@ public partial class MaintenanceViewModel : BaseViewModel
     public void ClearCache () 
     {
         _dbManager.ReinitDb();
+        _messenger.Send<SetlistFmSong>();
     }
 
     [RelayCommand]
@@ -86,6 +88,9 @@ public partial class MaintenanceViewModel : BaseViewModel
             CsvProgress = String.Empty;
             OnPropertyChanged(nameof(CsvIsInProgress));
             OnPropertyChanged(nameof(CsvProgress));
+
+            // Send request to main page to recalc
+            _messenger.Send<SetlistFmSong>();
         }
     }
 
@@ -93,28 +98,57 @@ public partial class MaintenanceViewModel : BaseViewModel
     public async Task RefreshConcertDbSetlistFm () 
     {
         RetrySuggestion result = RetrySuggestion.Good;
-        do 
-        {
-            result = await _concertProvider.PopulateConcertList(_currUser.Name);
-            if (result == RetrySuggestion.WaitAndRetry)
-            {
-                Log.Debug("Api call suggests to wait: sleeping 2000 ms", result.ToString());
-                await Task.Delay(2000);
-            }
-        } 
-        while (result != RetrySuggestion.Stop);
-        Log.Info("Api calls ended", result.ToString());
+        CsvIsInProgress = true;
+        CsvProgress = String.Empty;
+        OnPropertyChanged(nameof(CsvIsInProgress));
+        OnPropertyChanged(nameof(CsvProgress));
 
-        Concert? concert = null;
-        do 
-        {
-            concert = _concertProvider.GetNextConcert();
-            if (concert is not null)
+        int i = 1;
+        try {
+            do 
             {
-                await _dbManager.AddConcert(_currUser.Id, concert);
-            }
-        } 
-        while (concert is not null);
+                result = await _concertProvider.PopulateConcertList(_currUser.Name);
+                if (result == RetrySuggestion.WaitAndRetry)
+                {
+                    Log.Debug("Api call suggests to wait: sleeping 2000 ms", result.ToString());
+                    await Task.Delay(2000);
+                }
+                CsvProgress = $"Retrieved page {i} from setlist.fm";
+                OnPropertyChanged(nameof(CsvProgress));
+                i++;
+            } 
+            while (result != RetrySuggestion.Stop);
+            Log.Info("Api calls ended", result.ToString());
+
+            Concert? concert = null;
+            i = 1;
+            do 
+            {
+                concert = _concertProvider.GetNextConcert();
+                if (concert is not null)
+                {
+                    await _dbManager.AddConcert(_currUser.Id, concert);
+                }
+                CsvProgress = $"Added concert {i} to db";
+                OnPropertyChanged(nameof(CsvProgress));
+                i++;
+            } 
+            while (concert is not null);
+        }
+        catch (Exception ex)
+        {
+            Log.Warn("Error in getting data from API", ex.Message);
+        }
+        finally 
+        {
+            CsvIsInProgress = false;
+            CsvProgress = String.Empty;
+            OnPropertyChanged(nameof(CsvIsInProgress));
+            OnPropertyChanged(nameof(CsvProgress));
+
+            // Send request to main page to recalc
+            _messenger.Send<SetlistFmSong>();
+        }
     }
 
     [RelayCommand]

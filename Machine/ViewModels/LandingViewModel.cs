@@ -5,6 +5,7 @@ using System.Text;
 using CommunityToolkit.Maui.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using Java.Util.Logging;
 using MetalMachine.Models;
 using MetalMachine.Services;
@@ -21,11 +22,13 @@ public partial class LandingViewModel : BaseViewModel
     private long _numConcerts;
     private long _numDays;
     private long _numEstimatedTrips;
-    public LandingViewModel(IDBManager db, IGeocoding g, IPreferences p, IConcertProvider c) : base(db, g, p, c) 
+    public LandingViewModel(IDBManager db, IGeocoding g, IPreferences p, IConcertProvider c, IMessenger m) : base(db, g, p, c, m) 
     {
         CsvIsInProgress = false;
         CsvProgress = String.Empty;
         LastUserLocation = new Location(0, 0);
+
+        _messenger.Register<SetlistFmSong>(this, (recipient, song) => RereadDb(song));
     }
 
     public string Distance => _distance.ToString("n2");
@@ -60,6 +63,19 @@ public partial class LandingViewModel : BaseViewModel
             await LoadData();
         }
 
+        OnPropertyChanged(nameof(Distance));
+        OnPropertyChanged(nameof(AvgDistance));
+        OnPropertyChanged(nameof(MaxDistance));
+        OnPropertyChanged(nameof(MaxDistancePlace));
+        OnPropertyChanged(nameof(NumConcerts));
+        OnPropertyChanged(nameof(NumDays));
+        OnPropertyChanged(nameof(NumEstimatedTrips));
+        OnPropertyChanged(nameof(MaxDistanceBand));
+    }
+
+    internal async void RereadDb(SetlistFmSong song) 
+    {
+        await LoadData();
         OnPropertyChanged(nameof(Distance));
         OnPropertyChanged(nameof(AvgDistance));
         OnPropertyChanged(nameof(MaxDistance));

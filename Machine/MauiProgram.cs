@@ -4,6 +4,7 @@ using CommunityToolkit.Maui;
 using MetalMachine.Pages;
 using MetalMachine.ViewModels;
 using MetalMachine.Services;
+using CommunityToolkit.Mvvm.Messaging;
 
 namespace MetalMachine;
 
@@ -40,6 +41,7 @@ public static class MauiProgram
 		builder.Services.AddSingleton<IGeocoding>(Geocoding.Default);
 		builder.Services.AddSingleton<IPreferences>(Preferences.Default);
 		builder.Services.AddSingleton<IConcertProvider>(new ApiConcertProvider());
+		builder.Services.AddSingleton<IMessenger>(new WeakReferenceMessenger());
 		DependencyService.RegisterSingleton<IGeocoding>(Geocoding.Default);
 		return builder;
 	}

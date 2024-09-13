@@ -1,6 +1,7 @@
 using System;
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using Java.Util;
 using MetalMachine.Models;
 using MetalMachine.Services;
@@ -11,7 +12,7 @@ public partial class UserViewModel : BaseViewModel
 {
     private List<User> _users;
 
-    public UserViewModel (IDBManager db, IGeocoding g, IPreferences p, IConcertProvider c) : base (db, g, p, c) 
+    public UserViewModel (IDBManager db, IGeocoding g, IPreferences p, IConcertProvider c, IMessenger m) : base (db, g, p, c, m) 
     {
         _users = [];
         SelectingExisting = true;
@@ -52,7 +53,7 @@ public partial class UserViewModel : BaseViewModel
             _users = await _dbManager.GetUsers();
             OnPropertyChanged(nameof(AvailableUsers));
 
-            _currUser = new User(NewUser, newId);
+            CurrentUser = new User(NewUser, newId);
         }
         NewUser = String.Empty;
         SelectingExisting = !SelectingExisting;
