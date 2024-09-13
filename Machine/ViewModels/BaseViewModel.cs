@@ -13,14 +13,16 @@ public partial class BaseViewModel : ObservableObject
     protected IDBManager _dbManager;
     protected IGeocoding _geocoding;
     protected IPreferences _prefs;
+    protected IConcertProvider _concertProvider;
     protected User _currUser;
     protected Location _currLocation;
 
-    public BaseViewModel (IDBManager dbManager, IGeocoding geo, IPreferences pref) 
+    public BaseViewModel (IDBManager dbManager, IGeocoding geo, IPreferences pref, IConcertProvider concertProvider) 
     {
         _dbManager = dbManager;
         _geocoding = geo;
         _prefs = pref;
+        _concertProvider = concertProvider;
 
         _currUser = new User(String.Empty, -1);
         RefreshCurrentUser();

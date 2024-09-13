@@ -21,7 +21,7 @@ public partial class LandingViewModel : BaseViewModel
     private long _numConcerts;
     private long _numDays;
     private long _numEstimatedTrips;
-    public LandingViewModel(IDBManager db, IGeocoding g, IPreferences p) : base(db, g, p) 
+    public LandingViewModel(IDBManager db, IGeocoding g, IPreferences p, IConcertProvider c) : base(db, g, p, c) 
     {
         CsvIsInProgress = false;
         CsvProgress = String.Empty;

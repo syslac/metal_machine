@@ -2,6 +2,8 @@ using System;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Text;
+using Android.App;
+using Android.Util;
 using CommunityToolkit.Maui.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -13,7 +15,7 @@ namespace MetalMachine.ViewModels;
 
 public partial class MaintenanceViewModel : BaseViewModel
 {
-    public MaintenanceViewModel(IDBManager db, IGeocoding g, IPreferences p) : base(db, g, p) 
+    public MaintenanceViewModel(IDBManager db, IGeocoding g, IPreferences p, IConcertProvider c) : base(db, g, p, c) 
     {
         CsvIsInProgress = false;
         CsvProgress = String.Empty;
@@ -57,23 +59,16 @@ public partial class MaintenanceViewModel : BaseViewModel
                         string[] chunks = csvText.Split(";");
                         if (chunks.Length >= 4) 
                         {
-                            // [2] is the "short location"
-                            long locationId;
-                            (Location?, long?) existingCoordinates = await _dbManager.GetCoordinates(chunks[2]);
-                            if (existingCoordinates.Item2 is null)
-                            {
-                                Location geocoded = (await _geocoding.GetLocationsAsync(chunks[2])).FirstOrDefault();
-                                // 1s wait to not hammer the Geocoding API
-                                await Task.Delay(1000);
-                                locationId = await _dbManager.AddAddress(chunks[2], geocoded);
-                            }
-                            else 
-                            {
-                                locationId = existingCoordinates.Item2 ?? -1;
-                            }
                             // [0] is the artist
+                            // [2] is the address name
                             // [3] is the date, in yyyy-mm-dd
-                            await _dbManager.AddConcert(CurrentUser.Id, chunks[0], locationId, DateTime.ParseExact(chunks[3], "yyyy-MM-dd", CultureInfo.InvariantCulture));
+                            // I can pass an empty new Location here, it will
+                            // not be used inside the method
+                            Concert toAdd = new Concert(chunks[0], new Location(), DateTime.ParseExact(chunks[3], "yyyy-MM-dd", CultureInfo.InvariantCulture), chunks[2]);
+                            await _dbManager.AddConcert(CurrentUser.Id, toAdd);
+
+                            // 1s wait to not hammer the Geocoding API
+                            await Task.Delay(1000);
                         }
                     }
                     i++;
@@ -92,6 +87,34 @@ public partial class MaintenanceViewModel : BaseViewModel
             OnPropertyChanged(nameof(CsvIsInProgress));
             OnPropertyChanged(nameof(CsvProgress));
         }
+    }
+
+    [RelayCommand]
+    public async Task RefreshConcertDbSetlistFm () 
+    {
+        RetrySuggestion result = RetrySuggestion.Good;
+        do 
+        {
+            result = await _concertProvider.PopulateConcertList(_currUser.Name);
+            if (result == RetrySuggestion.WaitAndRetry)
+            {
+                Log.Debug("Api call suggests to wait: sleeping 2000 ms", result.ToString());
+                await Task.Delay(2000);
+            }
+        } 
+        while (result != RetrySuggestion.Stop);
+        Log.Info("Api calls ended", result.ToString());
+
+        Concert? concert = null;
+        do 
+        {
+            concert = _concertProvider.GetNextConcert();
+            if (concert is not null)
+            {
+                await _dbManager.AddConcert(_currUser.Id, concert);
+            }
+        } 
+        while (concert is not null);
     }
 
     [RelayCommand]

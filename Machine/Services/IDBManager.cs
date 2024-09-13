@@ -24,7 +24,7 @@ public interface IDBManager
     // get a single concert (best match) using a query string
     public Task<Concert?> FindConcert(string user, string searchString);
     // store a new concert
-    public Task<long> AddConcert(long user_id, string artist, long loc_id, DateTime date);
+    public Task<long> AddConcert(long user_id, Concert concert);
 
 
 }

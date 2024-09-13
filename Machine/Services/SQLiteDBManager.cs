@@ -136,9 +136,29 @@ public class SQLiteDBManager : IDBManager
         return retVal;
     }
 
-    public async Task<long> AddConcert(long user_id, string artist, long loc_id, DateTime date)
+    public async Task<long> AddConcert(long user_id, Concert concert)
     {
         Preamble();
+
+        long locationId;
+        (Location?, long?) existingCoordinates = await GetCoordinates(concert.AddressName);
+        if (existingCoordinates.Item2 is null)
+        {
+            Location geocoded;
+            if (concert.Address.Latitude != 0 && concert.Address.Longitude != 0) 
+            {
+                geocoded = concert.Address;
+            }
+            else 
+            {
+                geocoded = (await DependencyService.Get<IGeocoding>()?.GetLocationsAsync(concert.AddressName)).FirstOrDefault();
+            }
+            locationId = await AddAddress(concert.AddressName, geocoded);
+        }
+        else 
+        {
+            locationId = existingCoordinates.Item2 ?? -1;
+        }
 
         string query = """
         INSERT INTO [concerts] ([user_id], [concert_name], [concert_location_id], [concert_date])
@@ -148,9 +168,9 @@ public class SQLiteDBManager : IDBManager
         comm.CommandText = query;
         await comm.PrepareAsync();
         comm.Parameters.AddWithValue("@user", user_id);
-        comm.Parameters.AddWithValue("@artst", artist);
-        comm.Parameters.AddWithValue("@loc", loc_id);
-        comm.Parameters.AddWithValue("@date", date.ToString("s"));
+        comm.Parameters.AddWithValue("@artst", concert.Name);
+        comm.Parameters.AddWithValue("@loc", locationId);
+        comm.Parameters.AddWithValue("@date", concert.Date.ToString("s"));
         long retVal = -1;
 
         try 

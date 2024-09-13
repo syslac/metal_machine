@@ -39,6 +39,11 @@
         </Grid>
 
         <Grid Grid.Row="2" Grid.Column="0">
+                <ImageButton Source="world.svg" WidthRequest="96" VerticalOptions="Center" HorizontalOptions="Center" Command="{Binding RefreshConcertDbSetlistFmCommand}" />
+                <Label Text="Get from setlist.fm API" HorizontalOptions="Center" FontAttributes="Italic" TextColor="#b3b3b3" />
+        </Grid>
+
+        <Grid Grid.Row="2" Grid.Column="1">
                 <ImageButton Source="download.svg" WidthRequest="96" VerticalOptions="Center" HorizontalOptions="Center" Command="{Binding DownloadDbCommand}" />
                 <Label Text="Download DB" HorizontalOptions="Center" FontAttributes="Italic" TextColor="#b3b3b3" />
         </Grid>

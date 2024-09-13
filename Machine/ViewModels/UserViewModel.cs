@@ -11,7 +11,7 @@ public partial class UserViewModel : BaseViewModel
 {
     private List<User> _users;
 
-    public UserViewModel (IDBManager db, IGeocoding g, IPreferences p) : base (db, g, p) 
+    public UserViewModel (IDBManager db, IGeocoding g, IPreferences p, IConcertProvider c) : base (db, g, p, c) 
     {
         _users = [];
         SelectingExisting = true;
