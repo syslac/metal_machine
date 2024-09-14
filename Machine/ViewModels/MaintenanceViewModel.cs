@@ -165,6 +165,7 @@ public partial class MaintenanceViewModel : BaseViewModel
             {
                 Log.Error("Error saving db backup", fileSaverResult.Exception.Message);
             }
+            dbFile.Close();
         }
         catch (Exception e) 
         {
@@ -172,5 +173,44 @@ public partial class MaintenanceViewModel : BaseViewModel
         }
     }
 
+    [RelayCommand]
+    public async Task ImportDb () 
+    {
+        try 
+        {
+            var result = await FilePicker.PickAsync(PickOptions.Default);
+            if (result is not null) 
+            {
+                CsvIsInProgress = true;
+                CsvProgress = "Loading Database...";
+                OnPropertyChanged(nameof(CsvIsInProgress));
+                OnPropertyChanged(nameof(CsvProgress));
+
+                using var stream = await result.OpenReadAsync();
+                StreamReader reader = new StreamReader(stream);
+                MemoryStream memoryStream = new MemoryStream();
+                await reader.BaseStream.CopyToAsync(memoryStream);
+
+                FileStream dbFile = File.OpenWrite(_dbManager.ToString());
+                dbFile.WriteAsync(memoryStream.ToArray());
+
+                dbFile.Close();
+            }
+        }
+        catch (Exception e) 
+        {
+            Log.Error("Error loading db from backup", e.Message);
+        }
+        finally 
+        {
+            CsvIsInProgress = false;
+            CsvProgress = String.Empty;
+            OnPropertyChanged(nameof(CsvIsInProgress));
+            OnPropertyChanged(nameof(CsvProgress));
+
+            // Send request to main page to recalc
+            _messenger.Send<SetlistFmSong>();
+        }
+    }
 }
 
