@@ -154,10 +154,22 @@ public partial class MaintenanceViewModel : BaseViewModel
     [RelayCommand]
     public async Task DownloadDb () 
     {
-        //using var stream = await FileSystem.AppDataDirectory.
-        //ReadLines
-        //using var stream = new MemoryStream(Encoding.Default.GetBytes("Hello from the Community Toolkit!"));
-        //var fileSaverResult = await FileSaver.Default.SaveAsync("test.db", stream, null);   
+        try 
+        {
+            FileStream dbFile = File.OpenRead(_dbManager.ToString());
+            MemoryStream dbRaw = new MemoryStream();
+            await dbFile.CopyToAsync(dbRaw);
+            //using var streamOut = new MemoryStream(dbRaw.ToArray());
+            var fileSaverResult = await FileSaver.SaveAsync($"backup_{DateTime.Now.ToString("s")}.db", dbRaw, null);
+            if (!fileSaverResult.IsSuccessful)
+            {
+                Log.Error("Error saving db backup", fileSaverResult.Exception.Message);
+            }
+        }
+        catch (Exception e) 
+        {
+            Log.Error("Error saving db backup", e.Message);
+        }
     }
 
 }

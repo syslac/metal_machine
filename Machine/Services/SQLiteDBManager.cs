@@ -15,17 +15,24 @@ namespace MetalMachine.Services;
 public class SQLiteDBManager : IDBManager
 {
     private SqliteConnection? conn;
+    private string _dbFileName;
     public SQLiteDBManager (string path) 
     {
         if (path is null || path == String.Empty) 
         {
             return;
         }
+        _dbFileName = path;
         string completePath = $"{FileSystem.AppDataDirectory}/{path}";
         conn = new SqliteConnection($"Data Source={completePath}");
         Log.Warn("CTOR", $"Data Source={completePath}");
 
         InitTables();
+    }
+
+    public override string ToString()
+    {
+        return $"{FileSystem.AppDataDirectory}/{_dbFileName}";
     }
 
     public async void InitTables()
