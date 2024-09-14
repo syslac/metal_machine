@@ -181,6 +181,7 @@ public partial class MaintenanceViewModel : BaseViewModel
             var result = await FilePicker.PickAsync(PickOptions.Default);
             if (result is not null) 
             {
+                _dbManager.CloseConnection();
                 CsvIsInProgress = true;
                 CsvProgress = "Loading Database...";
                 OnPropertyChanged(nameof(CsvIsInProgress));

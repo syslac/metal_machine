@@ -5,6 +5,7 @@
              xmlns:vm="clr-namespace:MetalMachine.ViewModels"
              xmlns:v="clr-namespace:MetalMachine.Pages"
              x:DataType="vm:LandingViewModel"
+             HideSoftInputOnTapped="True"
              Title="LandingView">
     <Grid>
         <Grid.ColumnDefinitions>
@@ -16,7 +17,7 @@
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
-                <RowDefinition Height=".2*" />
+                <RowDefinition Height=".3*" />
                 <RowDefinition Height="*" />
                 <RowDefinition Height="*" />
                 <RowDefinition Height="*" />
@@ -33,6 +34,19 @@
                     <Label Text="Logged in as " />
                     <Label Text="{Binding CurrentUser}" />
                 </StackLayout>
+            </VerticalStackLayout>
+            <VerticalStackLayout Spacing="10" Grid.Column="1" Grid.ColumnSpan="1" Grid.Row="0" HorizontalOptions="End" VerticalOptions="StartAndExpand" WidthRequest="150">
+                <ImageButton Source="filter.svg" HeightRequest="24" Command="{Binding ToggleFilterViewCommand}" IsVisible="{Binding IsFilterActive,Converter={StaticResource not}}" HorizontalOptions="End" />
+                <HorizontalStackLayout IsVisible="{Binding IsFilterActive}" MaximumHeightRequest="32" >
+                    <Label Text="Year" />
+                    <Entry Text="{Binding FilterYear,Mode=TwoWay}" Placeholder="Insert single year" MinimumWidthRequest="100" ReturnType="Next" />
+                    <ImageButton Source="done.svg" Command="{Binding ApplyFilterCommand}" IsVisible="{Binding IsFilterActive}" WidthRequest="24" HorizontalOptions="End" />
+                </HorizontalStackLayout>
+                <HorizontalStackLayout IsVisible="{Binding IsFilterActive}" MaximumHeightRequest="32" >
+                    <Label Text="Band" />
+                    <Entry Text="{Binding FilterBand,Mode=TwoWay}" Placeholder="Insert single band" MinimumWidthRequest="100" ReturnType="Send"/>
+                    <ImageButton Source="done.svg" Command="{Binding ApplyFilterCommand}" IsVisible="{Binding IsFilterActive}" WidthRequest="24" HorizontalOptions="End" />
+                </HorizontalStackLayout>
             </VerticalStackLayout>
 
             <!-- main grid -->

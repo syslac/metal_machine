@@ -27,10 +27,16 @@ public partial class LandingViewModel : BaseViewModel
         CsvIsInProgress = false;
         CsvProgress = String.Empty;
         LastUserLocation = new Location(0, 0);
+        IsFilterActive = false;
+        FilterYear = null;
+        FilterBand = null;
 
         _messenger.Register<SetlistFmSong>(this, (recipient, song) => RereadDb(song));
     }
 
+    public bool IsFilterActive { get; set; }
+    public string? FilterYear { get; set; }
+    public string? FilterBand { get; set; }
     public string Distance => _distance.ToString("n2");
     public bool ShowDistance { get; set; }
     public string MaxDistance => _maxDistance.ToString("n2");
@@ -94,7 +100,7 @@ public partial class LandingViewModel : BaseViewModel
         OnPropertyChanged(nameof(CsvIsInProgress));
         OnPropertyChanged(nameof(CsvProgress));
 
-        List<Concert> concertList = (await _dbManager.GetAllConcerts(CurrentUser.Id)) ?? [];
+        List<Concert> concertList = (await _dbManager.GetAllConcerts(CurrentUser.Id, FilterBand, FilterYear)) ?? [];
         _numConcerts = concertList?.Count ?? 0;
         _distance = 0;
         _avgDistance = 0;
@@ -168,6 +174,25 @@ public partial class LandingViewModel : BaseViewModel
         CsvProgress = String.Empty;
         OnPropertyChanged(nameof(CsvIsInProgress));
         OnPropertyChanged(nameof(CsvProgress));
+    }
+
+    [RelayCommand]
+    public void ToggleFilterView () 
+    {
+        IsFilterActive = !IsFilterActive;
+        OnPropertyChanged(nameof(IsFilterActive));
+    }
+
+    [RelayCommand]
+    public void ApplyFilter () 
+    {
+        IsFilterActive = false;
+        OnPropertyChanged(nameof(IsFilterActive));
+        if (FilterYear is null && FilterBand is null) 
+        {
+            return;
+        }
+        RereadDb(null);
     }
 
     [RelayCommand]

@@ -10,6 +10,7 @@ public interface IDBManager
 
     // calls InitTables after cleaning up db
     public void ReinitDb();
+    public void CloseConnection();
     public Task<List<User>> GetUsers();
     public Task<Location> GetUserLocation(string user);
     public Task<Location> UpdateUserLocation(string user, string location, IGeocoding? geo);
@@ -20,7 +21,7 @@ public interface IDBManager
     // store a new address, coordinates are always (lat, lon)
     public Task<long> AddAddress(string address, Location coordinates);
     // get all concerts of a single user
-    public Task<List<Concert>> GetAllConcerts(long user);
+    public Task<List<Concert>> GetAllConcerts(long user, string? band, string? year);
     // get a single concert (best match) using a query string
     public Task<Concert?> FindConcert(string user, string searchString);
     // store a new concert

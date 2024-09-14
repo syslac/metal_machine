@@ -16,6 +16,7 @@ public class SQLiteDBManager : IDBManager
 {
     private SqliteConnection? conn;
     private string _dbFileName;
+
     public SQLiteDBManager (string path) 
     {
         if (path is null || path == String.Empty) 
@@ -74,19 +75,30 @@ public class SQLiteDBManager : IDBManager
     }
 
 
-    ~SQLiteDBManager() 
+    public void CloseConnection() 
     {
         conn?.Close();
         conn = null;
+    }
+
+    ~SQLiteDBManager() 
+    {
+        CloseConnection();
     }
 
     private async void Preamble() 
     {
         if (conn is null) 
         {
-            await Task.CompletedTask;
-            Log.Warn("CTOR", "Null connection");
-            return;
+            string completePath = $"{FileSystem.AppDataDirectory}/{_dbFileName}";
+            conn = new SqliteConnection($"Data Source={completePath}");
+            Log.Warn("CTOR", $"Warning: needed to reinit connection to{completePath}");
+            if (conn is null) 
+            {
+                await Task.CompletedTask;
+                Log.Warn("CTOR", "Null connection");
+                return;
+            }
         }
         try 
         {
@@ -213,25 +225,51 @@ public class SQLiteDBManager : IDBManager
         throw new NotImplementedException();
     }
 
-    public async Task<List<Concert>> GetAllConcerts(long user)
+    public async Task<List<Concert>> GetAllConcerts(long user, string? band, string? year)
     {
         Preamble();
 
         List<Concert> retVal = [];
         DataTable dt = new DataTable();
+        string query = String.Empty;
         try 
         {
-            string query = """
+            query = """
                 SELECT [concerts].[concert_name], [concerts].[concert_date],[locations].[latitude], [locations].[longitude], [locations].[address]
                 FROM [concerts] 
                 LEFT JOIN [locations] ON [concerts].[concert_location_id] = [locations].[id]
                 WHERE [concerts].[user_id] = @name
-                ORDER BY [concerts].[concert_date] ASC;
+                """;
+            if (band is not null && band != String.Empty) 
+            {
+                query += """
+
+                 AND [concerts].[concert_name] LIKE '@band'
+                """;
+            }
+            if (year is not null && band != String.Empty) 
+            {
+                query += """
+
+                 AND STRFTIME('%Y', [concerts].[concert_date]) = '@year'
+                """;
+            }
+            query += """
+
+                 ORDER BY [concerts].[concert_date] ASC;
                 """;
             SqliteCommand comm = conn.CreateCommand();
             comm.CommandText = query;
             await comm.PrepareAsync();
             comm.Parameters.AddWithValue("@name", user);
+            if (band is not null && band != String.Empty) 
+            {
+                comm.Parameters.AddWithValue("@band", band);
+            }
+            if (year is not null && band != String.Empty) 
+            {
+                comm.Parameters.AddWithValue("@year", year);
+            }
 
             DbDataReader res = await comm.ExecuteReaderAsync();
             dt.Load(res);
@@ -249,7 +287,7 @@ public class SQLiteDBManager : IDBManager
         catch (Exception ex) 
         {
             DataRow[] errs = dt.GetErrors();
-            Log.Warn($"GetAllConcerts - ", ex.Message);
+            Log.Warn($"GetAllConcerts - {query}", ex.Message);
             retVal = null;
         }
         finally 
