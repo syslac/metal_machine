@@ -182,7 +182,32 @@ public class SQLiteDBManager : IDBManager
         // will close connection at the end
         Preamble();
 
+        // Preselection query - I don't want to add the same concert twice
         string query = """
+            SELECT [concerts].[id], [concerts].[concert_name], [concerts].[concert_date],[concerts].[user_id]
+            FROM [concerts] 
+            WHERE [concerts].[user_id] = @name 
+            AND [concerts].[concert_name] = @artist
+            AND [concerts].[concert_date] = @date
+            """;
+        SqliteCommand preComm = conn.CreateCommand();
+        preComm.CommandText = query;
+        await preComm.PrepareAsync();
+        preComm.Parameters.AddWithValue("@name", user_id);
+        preComm.Parameters.AddWithValue("@artist", concert.Name);
+        preComm.Parameters.AddWithValue("@date", concert.Date.ToString("s"));
+
+        DataTable dt = new DataTable();
+        DbDataReader res = await preComm.ExecuteReaderAsync();
+        dt.Load(res);
+        if (dt.Rows.Count > 0) 
+        {
+            // we already have the same concert - abort and return its id
+            Log.Warn($"AddConcert - {query}", "No rows inserted - already present");
+            return dt.Rows[0].Field<long>("id");
+        }
+
+        query = """
         INSERT INTO [concerts] ([user_id], [concert_name], [concert_location_id], [concert_date])
         VALUES (@user, @artst, @loc, @date);
         """;
@@ -220,9 +245,64 @@ public class SQLiteDBManager : IDBManager
         return retVal;
     }
 
-    public async Task<Concert?> FindConcert(string user, string searchString)
+    public async Task<Concert?> FindConcert(string user, string? band, DateTime? date)
     {
-        throw new NotImplementedException();
+        Preamble();
+
+        string query = """
+            SELECT [concerts].[concert_name], [concerts].[concert_date], [concerts].[user_id], [locations].[latitude], [locations].[longitude], [locations].[address]
+            FROM [concerts] 
+            INNER JOIN [users] ON [concerts].[user_id] = [users].[id]
+            LEFT JOIN [locations] ON [concerts].[concert_location_id] = [locations].[id]
+            WHERE [users].[user_name] LIKE @name 
+            """;
+
+        if (band is not null && band.Trim() != String.Empty)
+        {
+            query += """
+
+            AND [concerts].[concert_name] = @artist 
+            """;
+        }
+        if (date is not null)
+        {
+            query += """
+
+            AND [concerts].[concert_date] = @date 
+            """;
+        }
+        SqliteCommand preComm = conn.CreateCommand();
+        preComm.CommandText = query;
+        await preComm.PrepareAsync();
+        preComm.Parameters.AddWithValue("@name", user);
+        if (band is not null && band.Trim() != String.Empty)
+        {
+            preComm.Parameters.AddWithValue("@artist", band);
+        }
+        if (date is not null)
+        {
+            preComm.Parameters.AddWithValue("@date", date?.ToString("s"));
+        }
+
+        DataTable dt = new DataTable();
+        DbDataReader res = await preComm.ExecuteReaderAsync();
+        dt.Load(res);
+        if (dt.Rows.Count > 0) 
+        {
+            return new Concert(
+                dt.Rows[0].Field<string>("concert_name"),
+                new Location(
+                    dt.Rows[0].Field<double>("latitude"),
+                    dt.Rows[0].Field<double>("longitude")
+                ),
+                DateTime.ParseExact(dt.Rows[0].Field<string>("concert_date"), "s", CultureInfo.InvariantCulture),
+                dt.Rows[0].Field<string>("address")
+            );
+        }
+        else 
+        {
+            return null;
+        }
     }
 
     public async Task<List<Concert>> GetAllConcerts(long user, string? band, string? year)
@@ -240,14 +320,14 @@ public class SQLiteDBManager : IDBManager
                 LEFT JOIN [locations] ON [concerts].[concert_location_id] = [locations].[id]
                 WHERE [concerts].[user_id] = @name 
                 """;
-            if (band is not null && band != String.Empty) 
+            if (band is not null && band?.Trim() != String.Empty) 
             {
                 query += """
 
                  AND [concerts].[concert_name] LIKE @band 
                 """;
             }
-            if (year is not null && band != String.Empty) 
+            if (year is not null && band?.Trim() != String.Empty) 
             {
                 query += """
 

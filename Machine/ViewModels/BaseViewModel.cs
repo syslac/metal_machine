@@ -58,7 +58,7 @@ public partial class BaseViewModel : ObservableObject
             }
             if (value != null && value?.Name != String.Empty) 
             {
-                _currUser = value;
+                SetProperty(ref _currUser, value);
                 _prefs.Set<string>(typeof(MetalPreferences.UserName).Name, value?.Name ?? String.Empty);
                 _prefs.Set<long>(typeof(MetalPreferences.UserId).Name, value?.Id ?? -1);
                 Location userLoc = _dbManager.GetUserLocation(value?.Name ?? String.Empty).Result ?? new Location(0,0);
@@ -66,8 +66,14 @@ public partial class BaseViewModel : ObservableObject
                 _prefs.Set<double>(typeof(MetalPreferences.UserLongitude).Name, userLoc.Longitude);
                 _currLocation = userLoc;
             }
-            OnPropertyChanged(nameof(CurrentUser));
-            OnPropertyChanged(nameof(CurrentLocation));
+            //OnPropertyChanged(nameof(CurrentUser));
+            //OnPropertyChanged(nameof(CurrentLocation));
+
+            Task.Run(async () => 
+            {
+                await Task.Delay(50);
+                _messenger.Send<SetlistFmSong>();
+            });
         } 
     }
 

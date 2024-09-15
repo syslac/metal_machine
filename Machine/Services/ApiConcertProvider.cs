@@ -91,6 +91,7 @@ public class ApiConcertProvider : IConcertProvider
             if (schemaResponse is not null) 
             {
                 expectedConcerts = schemaResponse.itemsPerPage ?? 0;
+                Concert? lastConcert = null;
                 foreach (SetlistFmSetlist sl in schemaResponse?.setlist ?? [])
                 {
                     Location cLoc;
@@ -105,8 +106,7 @@ public class ApiConcertProvider : IConcertProvider
                     {
                         cLoc = (await DependencyService.Get<IGeocoding>()?.GetLocationsAsync($"{sl?.venue?.city?.name}, {sl?.venue?.city?.country?.name}"))?.FirstOrDefault();
                     }
-                    _concerts.Enqueue(
-                        new Concert(
+                    Concert toAdd = new Concert(
                             sl.artist.name, 
                             cLoc,
                             DateTime.ParseExact(
@@ -115,9 +115,20 @@ public class ApiConcertProvider : IConcertProvider
                                 CultureInfo.InvariantCulture
                             ),
                             $"{sl?.venue?.city?.name}, {sl?.venue?.city?.country?.name}"
-                        )
-                    );
+                        );
+                    _concerts.Enqueue(toAdd);
+                    lastConcert = toAdd;
                     addedConcerts++;
+                }
+                // check if I tried to add already existing concert, suggests
+                // I should stop here in API requests
+                if (lastConcert is not null) 
+                {
+                    Concert? existing = await DependencyService.Get<IDBManager>()?.FindConcert(extraParameters, lastConcert.Name, lastConcert.Date);
+                    if (existing is not null)
+                    {
+                        return RetrySuggestion.Stop;
+                    }
                 }
             }
         }

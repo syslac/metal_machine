@@ -5,6 +5,7 @@ using MetalMachine.Pages;
 using MetalMachine.ViewModels;
 using MetalMachine.Services;
 using CommunityToolkit.Mvvm.Messaging;
+using Java.Sql;
 
 namespace MetalMachine;
 
@@ -37,12 +38,20 @@ public static class MauiProgram
 
 	public static MauiAppBuilder RegisterServices(this MauiAppBuilder builder) 
 	{
-		builder.Services.AddSingleton<IDBManager>(new SQLiteDBManager(_dbPath));
+		IDBManager dbManager = new SQLiteDBManager(_dbPath);
+		builder.Services.AddSingleton<IDBManager>(dbManager);
 		builder.Services.AddSingleton<IGeocoding>(Geocoding.Default);
 		builder.Services.AddSingleton<IPreferences>(Preferences.Default);
 		builder.Services.AddSingleton<IConcertProvider>(new ApiConcertProvider());
 		builder.Services.AddSingleton<IMessenger>(new WeakReferenceMessenger());
+
+		// double registration, because the ones in builder.Services will be 
+		// auto-resolved in ViewModels, but what if I need it elsewhere in an
+		// independent class? Need this DependencyService
+		// Important to have a single instance registered in both, and not to
+		// accidentally register two different
 		DependencyService.RegisterSingleton<IGeocoding>(Geocoding.Default);
+		DependencyService.RegisterSingleton<IDBManager>(dbManager);
 		return builder;
 	}
 	public static MauiAppBuilder RegisterViews(this MauiAppBuilder builder) 

@@ -23,7 +23,7 @@ public interface IDBManager
     // get all concerts of a single user
     public Task<List<Concert>> GetAllConcerts(long user, string? band, string? year);
     // get a single concert (best match) using a query string
-    public Task<Concert?> FindConcert(string user, string searchString);
+    public Task<Concert?> FindConcert(string user, string? band, DateTime? date);
     // store a new concert
     public Task<long> AddConcert(long user_id, Concert concert);
 
