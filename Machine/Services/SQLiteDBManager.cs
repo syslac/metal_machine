@@ -238,20 +238,20 @@ public class SQLiteDBManager : IDBManager
                 SELECT [concerts].[concert_name], [concerts].[concert_date],[locations].[latitude], [locations].[longitude], [locations].[address]
                 FROM [concerts] 
                 LEFT JOIN [locations] ON [concerts].[concert_location_id] = [locations].[id]
-                WHERE [concerts].[user_id] = @name
+                WHERE [concerts].[user_id] = @name 
                 """;
             if (band is not null && band != String.Empty) 
             {
                 query += """
 
-                 AND [concerts].[concert_name] LIKE '@band'
+                 AND [concerts].[concert_name] LIKE @band 
                 """;
             }
             if (year is not null && band != String.Empty) 
             {
                 query += """
 
-                 AND STRFTIME('%Y', [concerts].[concert_date]) = '@year'
+                 AND STRFTIME('%Y', [concerts].[concert_date]) = @year 
                 """;
             }
             query += """
@@ -262,13 +262,13 @@ public class SQLiteDBManager : IDBManager
             comm.CommandText = query;
             await comm.PrepareAsync();
             comm.Parameters.AddWithValue("@name", user);
-            if (band is not null && band != String.Empty) 
+            if (band is not null && band.Trim() != String.Empty) 
             {
-                comm.Parameters.AddWithValue("@band", band);
+                comm.Parameters.AddWithValue("@band", band.Trim());
             }
-            if (year is not null && band != String.Empty) 
+            if (year is not null && year.Trim() != String.Empty) 
             {
-                comm.Parameters.AddWithValue("@year", year);
+                comm.Parameters.AddWithValue("@year", year.Trim());
             }
 
             DbDataReader res = await comm.ExecuteReaderAsync();
