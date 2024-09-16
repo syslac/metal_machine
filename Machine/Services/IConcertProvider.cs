@@ -17,4 +17,6 @@ public interface IConcertProvider
     public Concert? GetNextConcert();
 
     public Task<RetrySuggestion> PopulateConcertList(string? extraParameters = null);
+
+    public void ResetSeek();
 }

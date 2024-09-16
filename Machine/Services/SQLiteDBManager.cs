@@ -327,7 +327,7 @@ public class SQLiteDBManager : IDBManager
                  AND [concerts].[concert_name] LIKE @band 
                 """;
             }
-            if (year is not null && band?.Trim() != String.Empty) 
+            if (year is not null && year?.Trim() != String.Empty) 
             {
                 query += """
 

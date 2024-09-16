@@ -29,6 +29,11 @@ public class ApiConcertProvider : IConcertProvider
         _apiKey = initData;
     }
 
+    public void ResetSeek() 
+    {
+        _startingPage = 1;
+    }
+
     public Concert? GetNextConcert()
     {
         try 

@@ -119,6 +119,7 @@ public partial class MaintenanceViewModel : BaseViewModel
             } 
             while (result != RetrySuggestion.Stop);
             Log.Info("Api calls ended", result.ToString());
+            _concertProvider.ResetSeek();
 
             Concert? concert = null;
             i = 1;
