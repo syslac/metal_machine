@@ -2,6 +2,10 @@
 
 The idea for this app is to count how much you travelled for live music shows, and give the user basic stats about that.
 
+<img src="doc/main.png" width="200px">
+   
+<img src="doc/main_2.png" width="200px">
+
 This is achieved by combining data about user attendance with a geocoding layer. 
 The easiest way to get both, if you are a <a href="https://www.setlist.fm/">setlist.fm</a> user, is to retrieve it through their API.
 
@@ -20,6 +24,8 @@ No credentials are needed, since the concerts attended by user *X* are public da
 
 Next, you should enter your location, so the app knows where to compute the distances from. Your location will be geocoded, so you can check if the location you entered is valid or not by checking whether the lat/lon coordinates displayed at the top of the page are reasonable after inputing the location, or if they are still zeroes.
 
+<img src="doc/user.png" width="300px">
+
 ## Data
 Concert attendance data provided by <a href="https://www.setlist.fm/">setlist.fm</a>.
 
@@ -37,6 +43,8 @@ Here, "long name" means the actual venue name, where available, while "short nam
 For example an acceptable line would be, 
 ```Iron Maiden;Piazza unità d'Italia, Trieste, Italy;Trieste, Italy;2017-07-27```
 
+## Multi-platform?
+Despite being a MAUI app, I don't plan to ever adapt/release an iOS, nor PC, version. This is Android-only from the beginning, and the only reason it is in MAUI is as a project to study the stack a bit.
 
 ## Icons license
 * *World* icon: Vectors and icons by <a href="https://github.com/mariuszostrowski/subway?ref=svgrepo.com" target="_blank">Mariusz Ostrowski</a> in CC Attribution License via <a href="https://www.svgrepo.com/" target="_blank">SVG Repo</a>
