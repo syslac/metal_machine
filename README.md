@@ -9,7 +9,7 @@ The idea for this app is to count how much you travelled for live music shows, a
 This is achieved by combining data about user attendance with a geocoding layer. 
 The easiest way to get both, if you are a <a href="https://www.setlist.fm/">setlist.fm</a> user, is to retrieve it through their API.
 
-However, the app provides a way to be independent from any specifica API provider, as the geocoding layer can be provided by native Android API or by <a href="https://www.openstreetmap.org">OSM</a>, and it can import a CSV from the user, if the attendance data is kept manually up to date.
+However, the app provides a way to be independent from any specific API provider, as the geocoding layer can be provided by native Android API or by <a href="https://www.openstreetmap.org">OSM</a>, and it can import a CSV from the user, if the attendance data is kept manually up to date.
 And also if you use setlist.fm, it provides an option to export the underlying SQLite database, as a partial cloud backup.
 
 ## Name
@@ -31,6 +31,14 @@ Concert attendance data provided by <a href="https://www.setlist.fm/">setlist.fm
 
 Please note that this app uses a free API key, so the requests to setlist.fm are rate limited by purpose to 1 every 2 seconds: so if you have a long history of concerts, be patient! 
 Also, if you choose to modify the source code to increase speed, beware that this limit will be enforced by setlist.fm on the server side, and may lead to my key being revoked. As I don't plan to ever have any actual users for this app, this should not be a great issue for me, but if for whatever reason you plan on changing this app a lot and need serious data mining from setlist.fm, please consider applying for your own API key and change your config files to use it.
+
+### Data - manual scraping
+
+There is a shell script included that was used for prototyping the app using setlist.fm data before having API access. The way it works is: the user can visit own profile page, select the *concert list* option and on the dropdown for the number of concerts per page, choose to have as many as possible (500 max at the moment), then download the resulting html page.
+
+If the user then renames the downloaded file as ```setlist-list.html``` and puts it in the same folder as the shell script, running this should then scrape the single concert pages, following the links, and end up generating a csv that can be later imported in the app.
+
+The script is not pretty, and uses a mixture of awk and perl where I'm sure better one-liners exist, but it was never meant to be productionized, and also it doesn't need to run fast, since there are generous sleeps, here as well, to avoid hammering the setlist.fm site.
 
 ### Data - CSV option
 
